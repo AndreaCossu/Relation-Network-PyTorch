@@ -29,7 +29,7 @@ class Embeddings():
             glove2word2vec(glove_input_file=path_raw_embeddings, word2vec_output_file=path_gensim_embeddings)
 
         self.embeddings = KeyedVectors.load_word2vec_format(path_gensim_embeddings, binary=False)
-        self.unk = torch.zeros(dimension, requires_grad=False, device=device)
+        self.unk = torch.zeros(dimension, dtype=torch.float32, requires_grad=False, device=device)
 
     def get(self, key):
         '''
@@ -38,7 +38,7 @@ class Embeddings():
         '''
 
         if key in self.embeddings:
-            return torch.tensor(self.embeddings[key], device=self.device)
+            return torch.tensor(self.embeddings[key], dtype=torch.float32, device=self.device, requires_grad=False)
         else:
             return self.unk
 

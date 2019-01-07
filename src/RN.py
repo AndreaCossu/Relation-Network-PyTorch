@@ -11,7 +11,7 @@ class MLP(nn.Module):
         self.hidden_dims = hidden_dims
         self.output_dim = output_dim
 
-        self.linears = [nn.Linear(self.input_dim, self.hidden_dims[0])]
+        self.linears = nn.ModuleList([nn.Linear(self.input_dim, self.hidden_dims[0])])
 
         for i in range(1,len(self.hidden_dims)):
             self.linears.append(nn.Linear(self.hidden_dims[i-1], self.hidden_dims[i]))
