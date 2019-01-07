@@ -32,7 +32,7 @@ class MLP(nn.Module):
 
 class RelationNetwork(nn.Module):
 
-    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, device, self_loop=True, ordered=True):
+    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, device, query_dim=0, self_loop=True, ordered=True):
         '''
         :param object_dim: dimension of the single object to be taken into consideration from g
         :param self_loop: when True, during generation of pairs, it generates also the pair (o,o) for each object o. Default True.
@@ -41,7 +41,8 @@ class RelationNetwork(nn.Module):
         super(RelationNetwork, self).__init__()
 
         self.object_dim = object_dim
-        self.input_dim_g = 2 * self.object_dim # g analyzes pairs of objects
+        self.query_dim = query_dim
+        self.input_dim_g = 2 * self.object_dim + self.query_dim # g analyzes pairs of objects
         self.hidden_dims_g = hidden_dims_g
         self.output_dim_g = output_dim_g
         self.input_dim_f = self.output_dim_g
@@ -72,9 +73,10 @@ class RelationNetwork(nn.Module):
 
         return pairs
 
-    def forward(self, x):
+    def forward(self, x, q=None):
         '''
         :param x: (batch, n_features)
+        :param q: query, optional.
         '''
 
         pairs = self._generate_pairs(x)
@@ -83,10 +85,12 @@ class RelationNetwork(nn.Module):
         for i in range(len(pairs)):
             pair = pairs[i]
             pair_concat = torch.cat((pair[0], pair[1]))
+            if q is not None:
+                pair_concat = torch.cat((pair_concat, q))
             relations[i, :] = self.g(pair_concat)
 
         embedding = torch.sum(relations, dim=0) # (output_dim_g)
-        
+
         out = self.f(embedding) # (output_dim_f)
 
         return out
@@ -98,13 +102,15 @@ if __name__ == '__main__':
     hidden_dims_g = [20, 40]
     hidden_dims_f = [10, 20]
     output_dim_g = 60
+    query_dim = 8
     output_dim_f = 2
     batch_size = 6
 
     X = torch.randn(batch_size,obj_dim) # 6 objects with dimension 8
+    q = torch.randn(query_dim)
 
-    rn = RelationNetwork(obj_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, device)
+    rn = RelationNetwork(obj_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, device, query_dim)
 
-    result = rn(X)
+    result = rn(X,q)
 
     print(result)
