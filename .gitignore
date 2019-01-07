@@ -1,20 +1,14 @@
-# Byte-compiled / optimized / DLL files
-__pycache__/
-.idea/
 glove.6B/
 babi/
-# PyBuilder
-target/
 
-# Jupyter Notebook
+__pycache__/
+.idea/
+
 .ipynb_checkpoints
 
-# pyenv
-.python-version
-
-# Environments
 .env
 .venv
+.python-version
 env/
 venv/
 ENV/
