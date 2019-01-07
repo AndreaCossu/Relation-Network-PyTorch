@@ -15,10 +15,11 @@ class LSTM(nn.Module):
         self.hidden_dim = hidden_dim
         self.batch_size = batch_size
         self.device = device
+        self.dropout = 0.8 if self.num_layers > 1 else 0.0
 
-        self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers, dropout=0.8, batch_first=True).to(self.device)
+        self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers, dropout=self.dropout, batch_first=True).to(self.device)
 
-        self.hidden_state = self.reset_hidden_state()
+        self.reset_hidden_state()
 
 
     def forward(self, x):
@@ -35,6 +36,6 @@ class LSTM(nn.Module):
 
     def reset_hidden_state(self):
         # hidden is composed by hidden and cell state vectors
-        return (torch.randn(self.num_layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True),
+        self.hidden_state = (torch.randn(self.num_layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True),
                 torch.randn(self.num_layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True)
                 )

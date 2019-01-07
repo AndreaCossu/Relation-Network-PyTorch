@@ -43,21 +43,21 @@ class Embeddings():
             return self.unk
 
 
-def read_babi(path_babi):
+def read_babi_list(path_babi, embedding):
     '''
     :param path_babi: absolute path to babi file to parse
+    :param embedding: class to retrieve embeddings for words
 
     facts and questions are lists in which for each story there is an inner list.
     In facts each inner list contains tuples with:
-        1) ID of the story (from 1 to number_stories)
-        2) ID of the fact within story
-        2) list of tokens of the fact
+        1) ID of the fact within story
+        2) list of tokens embeddings of the fact
     In questions each inner list contains tuples with:
-        1) ID of the story (from 1 to number_stories)
+        1) ID of the query within the story
         2) IDs of the previous facts of the same story
-        2) list of tokens of the questions
-        3) single token representing answer
-        4) list of supporting facts IDs
+        3) list of tokens embeddings of the questions
+        4) single token embedding representing answer
+        5) list of supporting facts IDs
     '''
 
     facts = []
@@ -70,9 +70,9 @@ def read_babi(path_babi):
         for line in f:
             line = line.lower()
             tokens = word_tokenize(line)
-            index, tokens = tokens[0], tokens[1:]
+            index, tokens = int(tokens[0]), tokens[1:]
 
-            if index == '1':
+            if index == 1:
                 # new story has started
                 facts.append([])
                 questions.append([])
@@ -84,20 +84,62 @@ def read_babi(path_babi):
                 question_index = tokens.index('?')
                 question_tokens = tokens[:question_index]
                 answer = tokens[question_index + 1]
-                support = tokens[question_index+2:]
+                support = list(map(int, tokens[question_index+2:]))
 
+                question_tokens = list(map(embedding.get, question_tokens))
+                answer = embedding.get(answer)
 
-                questions[n_stories-1].append((n_stories, facts_ids, question_tokens, answer, support ))
+                questions[n_stories-1].append((index, facts_ids, question_tokens, answer, support ))
             else:
                 # fact
                 facts_ids.append(index)
-                facts[n_stories-1].append((n_stories, index, tokens))
+                tokens = list(map(embedding.get, tokens))
+                facts[n_stories-1].append((index, tokens))
 
     return facts, questions
 
-def is_a_fact_id(x):
-    try:
-        int(x)
-        return True
-    except ValueError:
-        return False
+'''
+def read_babi_tensor(path_babi, embedding):
+    :param path_babi: absolute path to babi file to parse
+    :param embedding: class to retrieve embeddings for words
+
+    facts and questions are tensors of size, respectively
+    (n_stories, n_facts, n_words, emb_dim)
+    (n_stories, n_questions, n_words, emb_dim)
+
+
+    facts = torch.zeros()
+    questions = []
+    n_stories = 0
+    facts_ids = []
+
+    with open(path_babi) as f:
+
+        for line in f:
+            line = line.lower()
+            tokens = word_tokenize(line)
+            index, tokens = int(tokens[0]), tokens[1:]
+
+            if index == 1:
+                # new story has started
+                facts.append([])
+                questions.append([])
+                n_stories += 1
+                facts_ids = []
+
+            if '?' in tokens:
+                # question found
+                question_index = tokens.index('?')
+                question_tokens = tokens[:question_index]
+                answer = tokens[question_index + 1]
+                support = list(map(int, tokens[question_index+2:]))
+
+
+                questions[n_stories-1].append((index, facts_ids, question_tokens, answer, support ))
+            else:
+                # fact
+                facts_ids.append(index)
+                facts[n_stories-1].append((index, tokens))
+
+    return facts, questions
+'''
