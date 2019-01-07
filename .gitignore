@@ -1,7 +1,8 @@
 # Byte-compiled / optimized / DLL files
 __pycache__/
+.idea/
 glove.6B/
-tasks_1-20_v1-2
+babi/
 # PyBuilder
 target/
 
