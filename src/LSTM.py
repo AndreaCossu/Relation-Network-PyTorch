@@ -19,23 +19,23 @@ class LSTM(nn.Module):
 
         self.lstm = nn.LSTM(self.input_dim, self.hidden_dim, self.num_layers, dropout=self.dropout, batch_first=True).to(self.device)
 
-        self.reset_hidden_state()
 
-
-    def forward(self, x):
+    def forward(self, x, h):
         '''
-        :param x: (batch, time, features) input tensor
+        :param x: (batch, words, embedding_dim) input tensor
         '''
 
-        # TODO: check dimensions of x
-        # TODO: don't use hidden state as class variable?
+        processed, h = self.lstm(x, h)
 
-        processed, self.hidden_state = self.lstm(x, self.hidden_state)
+        return processed, h
 
-        return processed
-
-    def reset_hidden_state(self):
+    def reset_hidden_state(self, b=None):
+        if b is None:
         # hidden is composed by hidden and cell state vectors
-        self.hidden_state = (torch.randn(self.num_layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True),
+            return (torch.randn(self.num_layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True),
                 torch.randn(self.num_layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True)
+                )
+        else:
+            return (torch.randn(self.num_layers, b, self.hidden_dim, device=self.device, requires_grad=True),
+                torch.randn(self.num_layers, b, self.hidden_dim, device=self.device, requires_grad=True)
                 )

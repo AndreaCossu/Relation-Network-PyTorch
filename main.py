@@ -95,38 +95,41 @@ for s in range(len(facts)):
         lstm_query.zero_grad()
         rn.zero_grad()
 
-        lstm_facts.reset_hidden_state()
-        lstm_query.reset_hidden_state()
+        h_f = lstm_facts.reset_hidden_state(b=len(facts[s]))
+        h_q = lstm_query.reset_hidden_state()
 
         words = q[2]
         query_target = q[3]
-        query_tensor = torch.zeros(len(words), args.emb_dim, requires_grad=True)
+        query_tensor = torch.zeros(len(words), args.emb_dim, requires_grad=False)
         for i in range(len(words)):
             query_tensor[i,:] = words[i]
         query_tensor = query_tensor.unsqueeze(0)
-        query_emb = lstm_query(query_tensor).squeeze()
+        query_emb, h_q = lstm_query(query_tensor, h_q)
+        query_emb = query_emb.squeeze()
         query_emb = query_emb[-1,:]
 
         story_f = facts[s]
         facts_emb = torch.zeros(len(story_f), args.hidden_dim_lstm, requires_grad=True)
+        fact_tensor = torch.zeros(len(story_f), 30, args.emb_dim, requires_grad=False) # len(words)
 
         ff = 0
         while story_f[ff][0] < q[0]:
             fact = story_f[ff]
 
             words = fact[1]
-            fact_tensor = torch.zeros(len(words), args.emb_dim, requires_grad=False)
             for i in range(len(words)):
-                fact_tensor[i,:] = words[i]
-            fact_tensor = fact_tensor.unsqueeze(0)
-            result = lstm_facts(fact_tensor).squeeze()
-            facts_emb[ff,:] = result[-1,:]
+                fact_tensor[ff,i,:] = words[i]
 
             ff += 1
+            if ff == len(story_f):
+                ff -= 1
+                break
 
-        result = rn(facts_emb[:ff,:], query_emb)
 
-        loss = criterion(result, query_target)
+        result, h_f = lstm_facts(fact_tensor, h_f)
+
+        rr = rn(result[:,-1,:], query_emb)
+        loss = criterion(rr, query_target)
 
         loss.backward()
 

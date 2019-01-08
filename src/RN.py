@@ -80,14 +80,17 @@ class RelationNetwork(nn.Module):
         '''
 
         pairs = self._generate_pairs(x)
-        relations = torch.zeros(len(pairs), self.output_dim_g, device=self.device, requires_grad=True)
+        #relations = torch.empty(self.output_dim_g, device=self.device, requires_grad=True)
+        pair_concat = torch.empty(len(pairs), self.input_dim_g, requires_grad=False, device=self.device)
 
         for i in range(len(pairs)):
             pair = pairs[i]
-            pair_concat = torch.cat((pair[0], pair[1]))
             if q is not None:
-                pair_concat = torch.cat((pair_concat, q))
-            relations[i, :] = self.g(pair_concat)
+                pair_concat[i,:] = torch.cat((pair[0], pair[1], q))
+            else:
+                pair_concat[i, :] = torch.cat((pair[0], pair[1]))
+
+        relations = self.g(pair_concat)
 
         embedding = torch.sum(relations, dim=0) # (output_dim_g)
 
