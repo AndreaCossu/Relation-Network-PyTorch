@@ -97,3 +97,62 @@ def read_babi_list(path_babi, embedding):
                 facts[n_stories-1].append((index, tokens))
 
     return facts, questions
+
+
+def get_question_encoding(q, emb_dim, lstm, h, device):
+    '''
+    :param q: single question structure
+    :param emb_dim: dimension of word embedding
+    :param lstm: LSTM to process query
+    :param h: hidden state of the LSTM
+
+    :return query_emb: LSTM final embedding of the query
+    :return query_target: tensor representing word embedding of target answer
+    :return h: final hidden state of LSTM
+    '''
+
+    words = q[2]
+    query_target = q[3]
+    query_tensor = torch.zeros(len(words), emb_dim, requires_grad=False, device=device)
+    for i in range(len(words)):
+        query_tensor[i,:] = words[i]
+    query_tensor = query_tensor.unsqueeze(0)
+    query_emb, h = lstm(query_tensor, h)
+    query_emb = query_emb.squeeze()
+    query_emb = query_emb[-1,:]
+
+    return query_emb, query_target, h
+
+def get_facts_encoding(story_f, hidden_dim, emb_dim, q_id, lstm, h, device):
+    '''
+    :param story_f: facts of the current story
+    :param hidden_dim: hidden dimension of the LSTM
+    :param emb_dim: dimension of word embedding
+    :param q_id: ID of the current question
+    :param lstm: LSTM to process facts
+    :param h: hidden state of LSTM
+
+    :return facts_emb: final embedding of LSTM of all facts before query
+    :return h: final hidden state of the LSTM
+    '''
+
+    facts_emb = torch.zeros(len(story_f), hidden_dim, requires_grad=True, device=device)
+    fact_tensor = torch.zeros(len(story_f), 30, emb_dim, requires_grad=False, device=device) # len(words)
+
+    ff = 0
+    while story_f[ff][0] < q_id: # check IDs of fact wrt ID of query
+        fact = story_f[ff]
+
+        words = fact[1]
+        for i in range(len(words)):
+            fact_tensor[ff,i,:] = words[i]
+
+        ff += 1
+        if ff == len(story_f):
+            ff -= 1
+            break
+
+
+    facts_emb, h = lstm(fact_tensor, h)
+
+    return facts_emb[:,-1,:], h

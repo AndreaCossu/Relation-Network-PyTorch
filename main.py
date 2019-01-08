@@ -1,5 +1,5 @@
 from src.RN import RelationNetwork
-from src.nlp_utils import Embeddings, read_babi_list
+from src.nlp_utils import Embeddings, read_babi_list, get_question_encoding, get_facts_encoding
 from src.LSTM import LSTM
 import torch
 import argparse
@@ -80,9 +80,6 @@ rn = RelationNetwork(args.obj_dim, args.hidden_dims_g, args.output_dim_g, args.h
 
 optimizer = torch.optim.Adam(chain(lstm_facts.parameters(), lstm_query.parameters(), rn.parameters()), args.learning_rate, weight_decay=args.weight_decay)
 
-for param in rn.parameters():
-    print(param)
-
 criterion = torch.nn.MSELoss()
 
 lstm_facts.train()
@@ -91,9 +88,9 @@ rn.train()
 
 losses = []
 print("Start training")
-for s in range(len(facts)):
+for s in range(len(facts)): # for each story
     story_q = questions[s]
-    for q in story_q:
+    for q in story_q: # for each question in the current story
 
         lstm_facts.zero_grad()
         lstm_query.zero_grad()
@@ -102,37 +99,13 @@ for s in range(len(facts)):
         h_f = lstm_facts.reset_hidden_state(b=len(facts[s]))
         h_q = lstm_query.reset_hidden_state()
 
-        words = q[2]
-        query_target = q[3]
-        query_tensor = torch.zeros(len(words), args.emb_dim, requires_grad=False)
-        for i in range(len(words)):
-            query_tensor[i,:] = words[i]
-        query_tensor = query_tensor.unsqueeze(0)
-        query_emb, h_q = lstm_query(query_tensor, h_q)
-        query_emb = query_emb.squeeze()
-        query_emb = query_emb[-1,:]
+        query_emb, query_target, h_q = get_question_encoding(q, args.emb_dim, lstm_query, h_q, device)
 
         story_f = facts[s]
-        facts_emb = torch.zeros(len(story_f), args.hidden_dim_lstm, requires_grad=True)
-        fact_tensor = torch.zeros(len(story_f), 30, args.emb_dim, requires_grad=False) # len(words)
 
-        ff = 0
-        while story_f[ff][0] < q[0]: # check IDs of fact wrt ID of query
-            fact = story_f[ff]
+        facts_emb, h_f = get_facts_encoding(story_f, args.hidden_dim_lstm, args.emb_dim, q[0], lstm_facts, h_f, device)
 
-            words = fact[1]
-            for i in range(len(words)):
-                fact_tensor[ff,i,:] = words[i]
-
-            ff += 1
-            if ff == len(story_f):
-                ff -= 1
-                break
-
-
-        result, h_f = lstm_facts(fact_tensor, h_f)
-
-        rr = rn(result[:,-1,:], query_emb)
+        rr = rn(facts_emb, query_emb)
         loss = criterion(rr, query_target)
 
         loss.backward()
