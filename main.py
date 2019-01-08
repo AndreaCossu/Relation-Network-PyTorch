@@ -80,16 +80,20 @@ rn = RelationNetwork(args.obj_dim, args.hidden_dims_g, args.output_dim_g, args.h
 
 optimizer = torch.optim.Adam(chain(lstm_facts.parameters(), lstm_query.parameters(), rn.parameters()), args.learning_rate, weight_decay=args.weight_decay)
 
+for param in rn.parameters():
+    print(param)
+
 criterion = torch.nn.MSELoss()
 
 lstm_facts.train()
 lstm_query.train()
 rn.train()
 
+losses = []
 print("Start training")
 for s in range(len(facts)):
-    questions = questions[s]
-    for q in questions:
+    story_q = questions[s]
+    for q in story_q:
 
         lstm_facts.zero_grad()
         lstm_query.zero_grad()
@@ -113,7 +117,7 @@ for s in range(len(facts)):
         fact_tensor = torch.zeros(len(story_f), 30, args.emb_dim, requires_grad=False) # len(words)
 
         ff = 0
-        while story_f[ff][0] < q[0]:
+        while story_f[ff][0] < q[0]: # check IDs of fact wrt ID of query
             fact = story_f[ff]
 
             words = fact[1]
@@ -135,6 +139,12 @@ for s in range(len(facts)):
 
         optimizer.step()
 
-        print(loss.item())
+        losses.append(loss.item())
 
 print("End training!")
+
+
+import matplotlib.pyplot as plt
+
+plt.plot(range(len(losses)), losses)
+plt.show()
