@@ -17,6 +17,7 @@ class MLP(nn.Module):
             self.linears.append(nn.Linear(self.hidden_dims[i-1], self.hidden_dims[i]))
         self.linears.append(nn.Linear(self.hidden_dims[-1], self.output_dim))
 
+        self.dropout = nn.Dropout(p=0.5)
     def forward(self, x):
         '''
         :param x: (n_features)
@@ -25,7 +26,8 @@ class MLP(nn.Module):
         for i in range(len(self.hidden_dims)):
             x = self.linears[i](x)
             x = F.relu(x)
-
+            x = self.dropout(x)
+            
         out = self.linears[-1](x)
 
         return out

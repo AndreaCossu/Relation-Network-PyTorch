@@ -1,5 +1,6 @@
 glove.6B/
 babi/
+CLEVR/
 
 __pycache__/
 .idea/
