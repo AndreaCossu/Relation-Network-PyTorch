@@ -83,11 +83,7 @@ def get_question_encoding(q, emb_dim, lstm, h, device):
     :return h: final hidden state of LSTM
     '''
 
-    words = q[2]
-    query_tensor = torch.zeros(len(words), requires_grad=False, device=device).long()
-
-    for i in range(len(words)):
-        query_tensor[i] = words[i]
+    query_tensor = torch.tensor(q[2], device=device).long()
 
     query_emb, h = lstm.process_query(query_tensor, h)
     query_emb = query_emb.squeeze()
@@ -108,21 +104,14 @@ def get_facts_encoding(story_f, hidden_dim, emb_dim, q_id, lstm, h, device):
     :return h: final hidden state of the LSTM
     '''
 
+    max_len_fact = 10
+    fact_tensor = torch.zeros(len(story_f), max_len_fact, requires_grad=False, device=device).long() # len(words)
 
-    fact_tensor = torch.zeros(len(story_f), 30, requires_grad=False, device=device).long() # len(words)
-
-    ff = 0
-    while story_f[ff][0] < q_id: # check IDs of fact wrt ID of query
-        fact = story_f[ff]
-
-        words = fact[1]
-        for i in range(len(words)):
-            fact_tensor[ff,i] = words[i]
-
-        ff += 1
-        if ff == len(story_f):
-            ff -= 1
+    for ff in range(len(story_f)):
+        if story_f[ff][0] > q_id: # check IDs of fact wrt ID of query
             break
+
+        fact_tensor[ff, :len(story_f[ff][1])] = torch.tensor(story_f[ff][1], device=device).long()
 
 
     facts_emb, h = lstm.process_facts(fact_tensor, h)
