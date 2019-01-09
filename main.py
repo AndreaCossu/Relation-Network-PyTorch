@@ -1,5 +1,5 @@
 from src.RN import RelationNetwork
-from src.nlp_utils import Embeddings, read_babi_list, get_question_encoding, get_facts_encoding
+from src.nlp_utils import read_babi_list, get_question_encoding, get_facts_encoding
 from src.LSTM import LSTM
 import torch
 import argparse
@@ -12,7 +12,6 @@ parser.add_argument('--epochs', type=int, default=100)
 parser.add_argument('--hidden_dims_g', nargs='+', type=int, default=[256, 256, 256, 256])
 parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512, 159])
 parser.add_argument('--hidden_dim_lstm', type=int, default=32)
-parser.add_argument('--output_dim_f', type=int, default=50)
 parser.add_argument('--output_dim_g', type=int, default=256)
 parser.add_argument('--lstm_layers', type=int, default=1)
 
@@ -42,17 +41,6 @@ if args.cuda:
 else:
     print('Using 0 GPUs')
 
-if args.emb_dim == 50:
-    embeddings_file = "glove.6B.50d.txt"
-elif args.emb_dim == 100:
-    embeddings_file = "glove.6B.100d.txt"
-elif args.emb_dim == 200:
-    embeddings_file = "glove.6B.200d.txt"
-elif args.emb_dim == 300:
-    embeddings_file = "glove.6B.300d.txt"
-else:
-    print("Wrong embedding dimension!")
-
 
 babi_file_train = "qa1_single-supporting-fact_train.txt"
 babi_file_test = "qa1_single-supporting-fact_test.txt"
@@ -61,29 +49,40 @@ device = torch.device(mode)
 
 cd = os.path.dirname(os.path.abspath(__file__))
 
-path_raw_embeddings = cd + "/glove.6B/" + embeddings_file
-print("Loading embeddings")
-embeddings = Embeddings(path_raw_embeddings, embeddings_file, args.emb_dim, device)
-print("Embeddings loaded!")
+'''
+if not args.train_embeddings:
+    path_raw_embeddings = cd + "/glove.6B/" + embeddings_file
+    print("Loading embeddings")
+    embeddings = Embeddings(path_raw_embeddings, embeddings_file, args.emb_dim, device)
+    print("Embeddings loaded!")
+else:
+    print("Train embeddings from scratch")
+'''
 
 print("Reading babi")
 path_babi = cd + "/babi/en-10k/" + babi_file_train
-facts, questions = read_babi_list(path_babi, embeddings)
+
+'''
+if not args.train_embeddings:
+    facts, questions = read_babi_list(path_babi, embeddings)
+    dict_size = len(embeddings.dictionary)
+'''
+
+facts, questions, dictionary = read_babi_list(path_babi)
+dict_size = len(dictionary)
+print("Dictionary size: ", dict_size)
 print("Done reading babi!")
 
+lstm = LSTM(args.hidden_dim_lstm, args.batch_size_lstm, dict_size, args.emb_dim, device)
 
-lstm_facts = LSTM(args.emb_dim, args.lstm_layers, args.hidden_dim_lstm, args.batch_size_lstm, device)
-lstm_query = LSTM(args.emb_dim, args.lstm_layers, args.hidden_dim_lstm, args.batch_size_lstm, device)
-
-rn = RelationNetwork(args.obj_dim, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, args.output_dim_f,
+rn = RelationNetwork(args.obj_dim, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size,
                      device, args.query_dim)
 
-optimizer = torch.optim.Adam(chain(lstm_facts.parameters(), lstm_query.parameters(), rn.parameters()), args.learning_rate, weight_decay=args.weight_decay)
+optimizer = torch.optim.Adam(chain(lstm.parameters(), rn.parameters()), args.learning_rate, weight_decay=args.weight_decay)
 
-criterion = torch.nn.MSELoss()
+criterion = torch.nn.CrossEntropyLoss()
 
-lstm_facts.train()
-lstm_query.train()
+lstm.train()
 rn.train()
 
 losses = []
@@ -92,21 +91,21 @@ for s in range(len(facts)): # for each story
     story_q = questions[s]
     for q in story_q: # for each question in the current story
 
-        lstm_facts.zero_grad()
-        lstm_query.zero_grad()
+        lstm.zero_grad()
         rn.zero_grad()
 
-        h_f = lstm_facts.reset_hidden_state(b=len(facts[s]))
-        h_q = lstm_query.reset_hidden_state()
+        h_q, h_f = lstm.reset_hidden_state(len(facts[s]))
 
-        query_emb, query_target, h_q = get_question_encoding(q, args.emb_dim, lstm_query, h_q, device)
+        query_emb, h_q = get_question_encoding(q, args.emb_dim, lstm, h_q, device)
 
+        query_target = torch.tensor([dictionary.index(q[3])], requires_grad=False, device=device).long()
         story_f = facts[s]
 
-        facts_emb, h_f = get_facts_encoding(story_f, args.hidden_dim_lstm, args.emb_dim, q[0], lstm_facts, h_f, device)
+        facts_emb, h_f = get_facts_encoding(story_f, args.hidden_dim_lstm, args.emb_dim, q[0], lstm, h_f, device)
 
         rr = rn(facts_emb, query_emb)
-        loss = criterion(rr, query_target)
+
+        loss = criterion(rr.unsqueeze(0), query_target)
 
         loss.backward()
 
