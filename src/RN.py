@@ -82,7 +82,6 @@ class RelationNetwork(nn.Module):
         '''
 
         pairs = self._generate_pairs(x)
-        #relations = torch.empty(self.output_dim_g, device=self.device, requires_grad=True)
         pair_concat = torch.empty(len(pairs), self.input_dim_g, requires_grad=False, device=self.device)
 
         for i in range(len(pairs)):
