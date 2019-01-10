@@ -7,11 +7,11 @@ class LSTM(nn.Module):
 
         super(LSTM, self).__init__()
 
-        self.embeddings = nn.Embedding(vocabulary_size, dim_embedding)
         self.batch_size = batch_size
         self.device = device
         self.hidden_dim = hidden_dim
 
+        self.embeddings = nn.Embedding(vocabulary_size, dim_embedding).to(self.device)
 
         self.lstm_q = nn.LSTM(dim_embedding, hidden_dim, batch_first = True).to(self.device)
         self.lstm_f = nn.LSTM(dim_embedding, hidden_dim, batch_first = True).to(self.device)
