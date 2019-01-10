@@ -5,9 +5,12 @@ import torch
 import argparse
 import os
 from itertools import chain
+from src.utils import files_names_test, files_names_train
+from src.train import train_sequential
+
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--epochs', type=int, default=5)
+parser.add_argument('--epochs', type=int, default=2)
 
 parser.add_argument('--hidden_dims_g', nargs='+', type=int, default=[256, 256, 256, 256])
 parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512, 159])
@@ -19,6 +22,9 @@ parser.add_argument('--obj_dim', type=int, default=32)
 parser.add_argument('--query_dim', type=int, default=32)
 parser.add_argument('--emb_dim', type=int, default=50)
 
+# which babi task to train and test
+# [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
+parser.add_argument('--babi_tasks', nargs='+', type=int, default=[1,2])
 
 parser.add_argument('--weight_decay', type=float, default=0)
 parser.add_argument('--learning_rate', type=float, default=2e-5)
@@ -42,17 +48,17 @@ else:
     print('Using 0 GPUs')
 
 
-babi_file_train = "qa1_single-supporting-fact_train.txt"
-babi_file_test = "qa1_single-supporting-fact_test.txt"
-
 device = torch.device(mode)
 
 cd = os.path.dirname(os.path.abspath(__file__))
 
 print("Reading babi")
-path_babi = cd + "/babi/en-10k/" + babi_file_train
+path_babi_base = cd + "/babi/en-10k/"
 
-stories, dictionary = read_babi(path_babi)
+to_read_train = [files_names_train[i-1] for i in args.babi_tasks]
+to_read_test = [files_names_test[i-1] for i in args.babi_tasks]
+
+stories, dictionary = read_babi(path_babi_base, to_read_train)
 stories = vectorize_babi(stories, dictionary, device)
 dict_size = len(dictionary)
 
@@ -71,49 +77,12 @@ criterion = torch.nn.CrossEntropyLoss()
 lstm.train()
 rn.train()
 
-accuracy = 0
-losses = []
-avg_losses = []
 print("Start training")
-for i in range(args.epochs):
-    s = 1
-    for question, answer, facts in stories: # for each story
-
-        lstm.zero_grad()
-        rn.zero_grad()
-
-        h_q, h_f = lstm.reset_hidden_state(facts.size(0))
-
-        question_emb, h_q = lstm.process_query(question, h_q)
-        question_emb = question_emb.squeeze()[-1,:]
-
-        facts_emb, h_f = lstm.process_facts(facts, h_f)
-        facts_emb = facts_emb[:,-1,:]
-
-        rr = rn(facts_emb, question_emb)
-
-        loss = criterion(rr.unsqueeze(0), answer)
-
-        loss.backward()
-        optimizer.step()
-
-        with torch.no_grad():
-            predicted = torch.argmax(torch.sigmoid(rr)).item()
-            if predicted == answer:
-                accuracy += 1
-            #print(dictionary[predicted], ": ", q[3])
-
-        losses.append(loss.item())
-
-        if ( (s %  args.print_every) == 0):
-            print("Epoch ", i, ": ", s, " / ", len(stories))
-            avg_losses.append(sum(losses)/float(len(losses)))
-            losses = []
-
-        s += 1
+avg_losses, accuracy = train_sequential(stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every)
 
 print("End training!")
 print("Accuracy: ", accuracy)
+
 import matplotlib.pyplot as plt
 
 plt.plot(range(len(avg_losses)), avg_losses)
