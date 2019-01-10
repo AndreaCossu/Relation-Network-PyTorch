@@ -86,4 +86,7 @@ print("Accuracy: ", accuracy)
 import matplotlib.pyplot as plt
 
 plt.plot(range(len(avg_losses)), avg_losses)
-plt.show()
+if args.cuda:
+    plt.savefig('training_error.png')
+else:
+    plt.show()
