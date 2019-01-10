@@ -7,7 +7,7 @@ import os
 from itertools import chain
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--epochs', type=int, default=1)
+parser.add_argument('--epochs', type=int, default=5)
 
 parser.add_argument('--hidden_dims_g', nargs='+', type=int, default=[256, 256, 256, 256])
 parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512, 159])
@@ -55,6 +55,7 @@ path_babi = cd + "/babi/en-10k/" + babi_file_train
 stories, dictionary = read_babi(path_babi)
 stories = vectorize_babi(stories, dictionary, device)
 dict_size = len(dictionary)
+
 print("Dictionary size: ", dict_size)
 print("Done reading babi!")
 
@@ -72,6 +73,7 @@ rn.train()
 
 accuracy = 0
 losses = []
+avg_losses = []
 print("Start training")
 for i in range(args.epochs):
     s = 1
@@ -105,6 +107,8 @@ for i in range(args.epochs):
 
         if ( (s %  args.print_every) == 0):
             print("Epoch ", i, ": ", s, " / ", len(stories))
+            avg_losses.append(sum(losses)/float(len(losses)))
+            losses = []
 
         s += 1
 
@@ -112,5 +116,5 @@ print("End training!")
 print("Accuracy: ", accuracy)
 import matplotlib.pyplot as plt
 
-plt.plot(range(len(losses)), losses)
+plt.plot(range(len(avg_losses)), avg_losses)
 plt.show()

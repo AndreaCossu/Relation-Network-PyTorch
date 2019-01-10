@@ -69,9 +69,9 @@ def read_babi(path_babi, only_relevant=False):
 
                 if only_relevant:
                     support = list(map(int, tokens[question_index+2:]))
-                    facts_substory = [facts[idx] for idx in support]
+                    facts_substory = list([facts[idx] for idx in support])
 
-                facts_substory = facts
+                facts_substory = list(facts)
 
                 #question_tokens = list(map(dictionary.index, question_tokens))
 
