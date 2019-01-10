@@ -99,23 +99,3 @@ class RelationNetwork(nn.Module):
         out = self.f(embedding) # (output_dim_f)
 
         return out
-
-
-if __name__ == '__main__':
-    device = 'cpu'
-    obj_dim = 8
-    hidden_dims_g = [20, 40]
-    hidden_dims_f = [10, 20]
-    output_dim_g = 60
-    query_dim = 8
-    output_dim_f = 2
-    batch_size = 6
-
-    X = torch.randn(batch_size,obj_dim) # 6 objects with dimension 8
-    q = torch.randn(query_dim)
-
-    rn = RelationNetwork(obj_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, device, query_dim)
-
-    result = rn(X,q)
-
-    print(result)
