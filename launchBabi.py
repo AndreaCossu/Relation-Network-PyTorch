@@ -5,7 +5,7 @@ import torch
 import argparse
 import os
 from itertools import chain
-from src.utils import files_names_test, files_names_train
+from src.utils import files_names_test, files_names_train, saving_paths_models, load_models
 from src.train import train_sequential
 
 
@@ -51,15 +51,14 @@ else:
 device = torch.device(mode)
 
 cd = os.path.dirname(os.path.abspath(__file__))
-
-print("Reading babi")
 path_babi_base = cd + "/babi/en-10k/"
+print("Reading babi")
 
-to_read_train = [files_names_train[i-1] for i in args.babi_tasks]
 to_read_test = [files_names_test[i-1] for i in args.babi_tasks]
-
+to_read_train = [files_names_train[i-1] for i in args.babi_tasks]
 stories, dictionary = read_babi(path_babi_base, to_read_train)
 stories = vectorize_babi(stories, dictionary, device)
+
 dict_size = len(dictionary)
 
 print("Dictionary size: ", dict_size)
@@ -69,6 +68,9 @@ lstm = LSTM(args.hidden_dim_lstm, args.batch_size_lstm, dict_size, args.emb_dim,
 
 rn = RelationNetwork(args.obj_dim, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size,
                      device, args.query_dim)
+
+if args.load:
+    load_models([lstm, rn], saving_paths_models)
 
 optimizer = torch.optim.Adam(chain(lstm.parameters(), rn.parameters()), args.learning_rate, weight_decay=args.weight_decay)
 

@@ -1,3 +1,29 @@
+import torch
+
+def save_models(models, paths):
+    '''
+    :param models: iterable of models to save
+    :param paths: iterable of saving paths
+    '''
+    for i in range(len(models)):
+        torch.save(models[i].state_dict(), paths[i])
+
+def load_models(models, paths):
+    '''
+    :param models: iterable of models to save
+    :param paths: iterable of saving paths
+    '''
+
+    for i in range(len(models)):
+        models[i].load_state_dict(torch.load(paths[i]))
+
+
+
+saving_paths_models = [
+    'models/lstm.pt',
+    'models/rn.pt'
+]
+
 files_names_test = [
     'qa1_single-supporting-fact_test.txt',
     'qa2_two-supporting-facts_test.txt',
