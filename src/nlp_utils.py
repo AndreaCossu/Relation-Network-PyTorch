@@ -1,33 +1,46 @@
-'''
-See https://stackoverflow.com/questions/37793118/load-pretrained-glove-vectors-in-python
-for a list of methods to efficiently load word embeddings in python
-'''
-
 import torch
 from nltk import word_tokenize
 
 
-def read_babi_list(path_babi):
+def vectorize_babi(stories, dictionary, device):
+    '''
+    :param stories: structure produced by read_babi function
+    :param dictionary: list of words produced by read_babi function
+
+    :return stories_v: the new stories structure with torch.Tensor representing each sentence
+                    by using word position in the dictionary.
+    '''
+    stories_v = []
+
+    for q, a, facts in stories:
+        q_v = torch.tensor([dictionary.index(el) for el in q], device=device).long()
+        a_v = torch.tensor([dictionary.index(a)], device=device).long()
+        facts_v = []
+        for fact in facts:
+            facts_v.append( torch.tensor([dictionary.index(el) for el in fact], device=device).long() )
+
+        facts_padded = torch.nn.utils.rnn.pad_sequence(facts_v, batch_first=True)
+
+        stories_v.append([q_v, a_v, facts_padded])
+
+    return stories_v
+
+
+def read_babi(path_babi, only_relevant=False):
     '''
     :param path_babi: absolute path to babi file to parse
+    :param only_relevant: if True returns only relevant facts for each question, else return all previous facts inside the story. Default False.
 
-    facts and questions are lists in which for each story there is an inner list.
-    In facts each inner list contains tuples with:
-        1) ID of the fact within story
-        2) list of tokens embeddings of the fact
-    In questions each inner list contains tuples with:
-        1) ID of the query within the story
-        2) IDs of the previous facts of the same story
-        3) list of tokens embeddings of the questions
-        4) single token embedding representing answer
-        5) list of supporting facts IDs
+    :return stories: list of lists. Each sublist is a list containing:
+            0) question - list of words
+            1) answer - single word
+            2) facts - list of list of words, one list for each fact
+
+    :return dictionary: a list containing all the words in the babi file
     '''
 
-    dictionary = []
-    facts = []
-    questions = []
-    n_stories = 0
-    facts_ids = []
+    dictionary = ['PAD']
+    stories = []
 
     with open(path_babi) as f:
 
@@ -38,17 +51,14 @@ def read_babi_list(path_babi):
 
             if index == 1:
                 # new story has started
-                facts.append([])
-                questions.append([])
-                n_stories += 1
-                facts_ids = []
+                facts = []
+
 
             if '?' in tokens:
                 # question found
                 question_index = tokens.index('?')
                 question_tokens = tokens[:question_index]
                 answer = tokens[question_index + 1]
-                support = list(map(int, tokens[question_index+2:]))
 
                 for el in question_tokens:
                     if el not in dictionary:
@@ -57,63 +67,25 @@ def read_babi_list(path_babi):
                 if answer not in dictionary:
                     dictionary.append(str(answer))
 
-                question_tokens = list(map(dictionary.index, question_tokens))
+                if only_relevant:
+                    support = list(map(int, tokens[question_index+2:]))
+                    facts_substory = [facts[idx] for idx in support]
 
-                questions[n_stories-1].append((index, facts_ids, question_tokens, answer, support ))
+                facts_substory = facts
+
+                #question_tokens = list(map(dictionary.index, question_tokens))
+
+                stories.append([question_tokens, answer, facts_substory])
+
             else:
                 # fact
-                facts_ids.append(index)
+
+                # update dictionary
                 for el in tokens:
                     if el not in dictionary:
                         dictionary.append(str(el))
-                tokens = list(map(dictionary.index, tokens))
-                facts[n_stories-1].append((index, tokens))
 
-    return facts, questions, dictionary
+                #tokens = list(map(dictionary.index, tokens))
+                facts.append(tokens)
 
-
-def get_question_encoding(q, emb_dim, lstm, h, device):
-    '''
-    :param q: single question structure
-    :param emb_dim: dimension of word embedding
-    :param lstm: LSTM to process query
-    :param h: hidden state of the LSTM
-
-    :return query_emb: LSTM final embedding of the query
-    :return h: final hidden state of LSTM
-    '''
-
-    query_tensor = torch.tensor(q[2], device=device).long()
-
-    query_emb, h = lstm.process_query(query_tensor, h)
-    query_emb = query_emb.squeeze()
-    query_emb = query_emb[-1,:]
-
-    return query_emb, h
-
-def get_facts_encoding(story_f, hidden_dim, emb_dim, q_id, lstm, h, device):
-    '''
-    :param story_f: facts of the current story
-    :param hidden_dim: hidden dimension of the LSTM
-    :param emb_dim: dimension of word embedding
-    :param q_id: ID of the current question
-    :param lstm: LSTM to process facts
-    :param h: hidden state of LSTM
-
-    :return facts_emb: final embedding of LSTM of all facts before query
-    :return h: final hidden state of the LSTM
-    '''
-
-    max_len_fact = 10
-    fact_tensor = torch.zeros(len(story_f), max_len_fact, requires_grad=False, device=device).long() # len(words)
-
-    for ff in range(len(story_f)):
-        if story_f[ff][0] > q_id: # check IDs of fact wrt ID of query
-            break
-
-        fact_tensor[ff, :len(story_f[ff][1])] = torch.tensor(story_f[ff][1], device=device).long()
-
-
-    facts_emb, h = lstm.process_facts(fact_tensor, h)
-
-    return facts_emb[:,-1,:], h
+    return stories, dictionary

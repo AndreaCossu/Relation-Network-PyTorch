@@ -1,5 +1,5 @@
 from src.RN import RelationNetwork
-from src.nlp_utils import read_babi_list, get_question_encoding, get_facts_encoding
+from src.nlp_utils import read_babi, vectorize_babi
 from src.LSTM import LSTM
 import torch
 import argparse
@@ -52,7 +52,8 @@ cd = os.path.dirname(os.path.abspath(__file__))
 print("Reading babi")
 path_babi = cd + "/babi/en-10k/" + babi_file_train
 
-facts, questions, dictionary = read_babi_list(path_babi)
+stories, dictionary = read_babi(path_babi)
+stories = vectorize_babi(stories, dictionary, device)
 dict_size = len(dictionary)
 print("Dictionary size: ", dict_size)
 print("Done reading babi!")
@@ -69,39 +70,46 @@ criterion = torch.nn.CrossEntropyLoss()
 lstm.train()
 rn.train()
 
+accuracy = 0
 losses = []
 print("Start training")
 for i in range(args.epochs):
-    for s in range(len(facts)): # for each story
-        story_q = questions[s]
-        #loss = 0
-        for q in story_q: # for each question in the current story
+    s = 1
+    for question, answer, facts in stories: # for each story
 
-            lstm.zero_grad()
-            rn.zero_grad()
+        lstm.zero_grad()
+        rn.zero_grad()
 
-            h_q, h_f = lstm.reset_hidden_state(len(facts[s]))
+        h_q, h_f = lstm.reset_hidden_state(facts.size(0))
 
-            query_emb, h_q = get_question_encoding(q, args.emb_dim, lstm, h_q, device)
+        question_emb, h_q = lstm.process_query(question, h_q)
+        question_emb = question_emb.squeeze()[-1,:]
 
-            query_target = torch.tensor([dictionary.index(q[3])], requires_grad=False, device=device).long()
-            story_f = facts[s]
+        facts_emb, h_f = lstm.process_facts(facts, h_f)
+        facts_emb = facts_emb[:,-1,:]
 
-            facts_emb, h_f = get_facts_encoding(story_f, args.hidden_dim_lstm, args.emb_dim, q[0], lstm, h_f, device)
+        rr = rn(facts_emb, question_emb)
 
-            rr = rn(facts_emb, query_emb)
+        loss = criterion(rr.unsqueeze(0), answer)
 
-            loss = criterion(rr.unsqueeze(0), query_target)
+        loss.backward()
+        optimizer.step()
 
-            loss.backward()
-            optimizer.step()
-            losses.append(loss.item())
+        with torch.no_grad():
+            predicted = torch.argmax(torch.sigmoid(rr)).item()
+            if predicted == answer:
+                accuracy += 1
+            #print(dictionary[predicted], ": ", q[3])
+
+        losses.append(loss.item())
 
         if ( (s %  args.print_every) == 0):
-            print("Epoch ", i, ": ", s, " / ", len(facts))
+            print("Epoch ", i, ": ", s, " / ", len(stories))
+
+        s += 1
 
 print("End training!")
-
+print("Accuracy: ", accuracy)
 import matplotlib.pyplot as plt
 
 plt.plot(range(len(losses)), losses)
