@@ -3,7 +3,7 @@ from src.nlp_utils import read_babi, vectorize_babi
 from src.LSTM import LSTM
 import torch
 import argparse
-import os 
+import os
 from itertools import chain
 from src.utils import files_names_test, files_names_train, saving_paths_models, load_models
 from src.train import train_sequential
@@ -18,8 +18,6 @@ parser.add_argument('--hidden_dim_lstm', type=int, default=32)
 parser.add_argument('--output_dim_g', type=int, default=256)
 parser.add_argument('--lstm_layers', type=int, default=1)
 
-parser.add_argument('--obj_dim', type=int, default=32)
-parser.add_argument('--query_dim', type=int, default=32)
 parser.add_argument('--emb_dim', type=int, default=50)
 
 # which babi task to train and test
@@ -28,7 +26,6 @@ parser.add_argument('--babi_tasks', nargs='+', type=int, default=[1,2])
 
 parser.add_argument('--weight_decay', type=float, default=0)
 parser.add_argument('--learning_rate', type=float, default=2e-5)
-parser.add_argument('--batch_size', type=int, default=1)
 parser.add_argument('--batch_size_lstm', type=int, default=1)
 
 parser.add_argument('--cuda', action="store_true")
@@ -65,8 +62,8 @@ print("Done reading babi!")
 
 lstm = LSTM(args.hidden_dim_lstm, args.batch_size_lstm, dict_size, args.emb_dim, device)
 
-rn = RelationNetwork(args.obj_dim, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size,
-                     device, args.query_dim)
+rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size,
+                     device)
 
 if args.load:
     load_models([lstm, rn], saving_paths_models)

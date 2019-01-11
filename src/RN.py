@@ -34,9 +34,9 @@ class MLP(nn.Module):
 
 class RelationNetwork(nn.Module):
 
-    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, device, query_dim=0, self_loop=True, ordered=True):
+    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, device, self_loop=True, ordered=True):
         '''
-        :param object_dim: dimension of the single object to be taken into consideration from g
+        :param object_dim: Equal to LSTM hidden dim. Dimension of the single object to be taken into consideration from g. 
         :param self_loop: when True, during generation of pairs, it generates also the pair (o,o) for each object o. Default True.
         :param ordered: when True, during generation of pairs, (o1,o2) and (o2, o1) are considered different pairs. Default True.
         '''
