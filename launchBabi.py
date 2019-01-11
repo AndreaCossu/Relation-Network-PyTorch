@@ -47,7 +47,6 @@ if args.cuda:
 else:
     print('Using 0 GPUs')
 
-
 device = torch.device(mode)
 
 cd = os.path.dirname(os.path.abspath(__file__))
@@ -85,8 +84,12 @@ avg_losses, accuracy = train_sequential(stories, args.epochs, lstm, rn, criterio
 print("End training!")
 print("Accuracy: ", accuracy)
 
+import matplotlib
 import matplotlib.pyplot as plt
 
+if args.cuda:
+    matplotlib.use('Agg')
+    
 plt.plot(range(len(avg_losses)), avg_losses)
 if args.cuda:
     plt.savefig('training_error.png')
