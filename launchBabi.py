@@ -79,7 +79,7 @@ lstm.train()
 rn.train()
 
 print("Start training")
-avg_losses, accuracy = train_sequential(stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every)
+avg_losses, accuracy = train_sequential(stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save)
 
 print("End training!")
 print("Accuracy: ", accuracy)
@@ -89,7 +89,7 @@ import matplotlib.pyplot as plt
 
 if args.cuda:
     matplotlib.use('Agg')
-    
+
 plt.plot(range(len(avg_losses)), avg_losses)
 if args.cuda:
     plt.savefig('training_error.png')

@@ -1,7 +1,8 @@
 import torch
 from src.utils import save_models, saving_paths_models
 
-def train_sequential(stories, epochs, lstm, rn, criterion, optimizer, print_every):
+def train_sequential(stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save):
+    
     accuracy = 0
     losses = []
     avg_losses = []
@@ -39,8 +40,9 @@ def train_sequential(stories, epochs, lstm, rn, criterion, optimizer, print_ever
                 print("Epoch ", i, ": ", s, " / ", len(stories))
                 avg_losses.append(sum(losses)/float(len(losses)))
 
-                if avg_losses[-1] < avg_losses[-2]:
-                    save_models([lstm, rn], saving_paths_models)
+                if not no_save:
+                    if avg_losses[-1] < avg_losses[-2]:
+                        save_models([lstm, rn], saving_paths_models)
 
                 losses = []
 
