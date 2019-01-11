@@ -93,6 +93,7 @@ if args.cuda:
 import matplotlib.pyplot as plt
 
 
+plt.figure()
 plt.plot(range(len(avg_train_losses)), avg_train_losses, 'b', label='train')
 plt.plot(range(len(val_losses)), val_losses, 'r', label='val')
 plt.legend(loc='best')
@@ -102,6 +103,7 @@ if args.cuda:
 else:
     plt.show()
 
+plt.figure()
 plt.plot(range(len(avg_train_accuracies)), avg_train_accuracies, 'b', label='train')
 plt.plot(range(len(val_accuracies)), val_accuracies, 'r', label='val')
 plt.legend(loc='best')
