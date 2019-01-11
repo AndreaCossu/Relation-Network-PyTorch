@@ -1,5 +1,5 @@
 import torch
-from utils import save_models, saving_paths_models
+from src.utils import save_models, saving_paths_models
 
 def train_sequential(stories, epochs, lstm, rn, criterion, optimizer, print_every):
     accuracy = 0
