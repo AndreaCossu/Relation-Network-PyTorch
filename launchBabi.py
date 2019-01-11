@@ -85,10 +85,12 @@ print("End training!")
 print("Accuracy: ", accuracy)
 
 import matplotlib
-import matplotlib.pyplot as plt
 
 if args.cuda:
     matplotlib.use('Agg')
+
+import matplotlib.pyplot as plt
+
 
 plt.plot(range(len(avg_losses)), avg_losses)
 if args.cuda:
