@@ -12,8 +12,8 @@ from src.train import train_single, test
 parser = argparse.ArgumentParser()
 parser.add_argument('--epochs', type=int, default=2)
 
-parser.add_argument('--hidden_dims_g', nargs='+', type=int, default=[256, 256, 256, 256])
-parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512, 159])
+parser.add_argument('--hidden_dims_g', nargs='+', type=int, default=[256, 256, 256])
+parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512])
 parser.add_argument('--hidden_dim_lstm', type=int, default=32)
 parser.add_argument('--output_dim_g', type=int, default=256)
 parser.add_argument('--lstm_layers', type=int, default=1)
@@ -22,10 +22,10 @@ parser.add_argument('--emb_dim', type=int, default=50)
 
 # which babi task to train and test
 # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-parser.add_argument('--babi_tasks', nargs='+', type=int, default=[1,2])
+parser.add_argument('--babi_tasks', nargs='+', type=int, default=[1])
 
 parser.add_argument('--weight_decay', type=float, default=0)
-parser.add_argument('--learning_rate', type=float, default=2e-5)
+parser.add_argument('--learning_rate', type=float, default=2e-4)
 parser.add_argument('--batch_size_lstm', type=int, default=1)
 
 parser.add_argument('--cuda', action="store_true")
