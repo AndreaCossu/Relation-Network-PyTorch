@@ -17,7 +17,7 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
 
             rn.train()
             lstm.train()
-            
+
             lstm.zero_grad()
             rn.zero_grad()
 
@@ -44,7 +44,7 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
             losses += loss.item()
 
             if ( (s %  print_every) == 0):
-                print("Epoch ", i, ": ", s, " / ", len(train_stories))
+                print("Epoch ", i+1, ": ", s, " / ", len(train_stories))
                 avg_train_losses.append(losses/float(print_every))
                 avg_train_accuracies.append(accuracies/float(print_every))
 
@@ -56,6 +56,9 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
                     if val_accuracies[-1] > val_accuracies[-2]:
                         save_models([lstm, rn], saving_paths_models)
 
+                print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
+                print("Train accuracy: ", avg_train_accuracies[-1], ". Validation accuracy: ", val_accuracies[-1])
+                print()
                 losses =  0.
                 accuracies = 0.
 
