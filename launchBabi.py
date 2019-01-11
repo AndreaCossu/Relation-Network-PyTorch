@@ -6,7 +6,7 @@ import argparse
 import os
 from itertools import chain
 from src.utils import files_names_test, files_names_train, saving_paths_models, load_models, split_train_validation
-from src.train import train_single
+from src.train import train_single, test
 
 
 parser = argparse.ArgumentParser()
@@ -56,8 +56,11 @@ stories, dictionary = read_babi(path_babi_base, to_read_train)
 stories = vectorize_babi(stories, dictionary, device)
 
 train_stories, validation_stories = split_train_validation(stories)
-dict_size = len(dictionary)
 
+test_stories, _ = read_babi(path_babi_base, to_read_test)
+test_stories = vectorize_babi(test_stories, dictionary, device)
+
+dict_size = len(dictionary)
 print("Dictionary size: ", dict_size)
 print("Done reading babi!")
 
@@ -73,13 +76,14 @@ optimizer = torch.optim.Adam(chain(lstm.parameters(), rn.parameters()), args.lea
 
 criterion = torch.nn.CrossEntropyLoss()
 
-lstm.train()
-rn.train()
-
 print("Start training")
 avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train_single(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save)
 
+avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion)
+
 print("End training!")
+print("Test accuracy: ", avg_test_loss)
+print("Test loss: ", avg_test_loss)
 
 import matplotlib
 

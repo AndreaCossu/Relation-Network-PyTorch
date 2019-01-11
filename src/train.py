@@ -15,6 +15,9 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
         s = 1
         for question, answer, facts in train_stories: # for each story
 
+            rn.train()
+            lstm.train()
+            
             lstm.zero_grad()
             rn.zero_grad()
 
@@ -64,6 +67,9 @@ def test(stories, lstm, rn, criterion):
 
     val_loss = 0.
     val_accuracy = 0.
+
+    rn.eval()
+    lstm.eval()
 
     with torch.no_grad():
         for question, answer, facts in stories: # for each story
