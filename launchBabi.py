@@ -83,7 +83,7 @@ avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion)
 
 print("End training!")
 print("Test accuracy: ", avg_test_loss)
-print("Test loss: ", avg_test_loss)
+print("Test loss: ", avg_test_accuracy)
 
 import matplotlib
 

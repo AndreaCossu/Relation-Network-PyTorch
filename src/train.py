@@ -47,6 +47,7 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
                 print("Epoch ", i+1, ": ", s, " / ", len(train_stories))
                 avg_train_losses.append(losses/float(print_every))
                 avg_train_accuracies.append(accuracies/float(print_every))
+                assert(avg_train_accuracies[-1] <= 1)
 
                 val_loss, val_accuracy = test(validation_stories,lstm,rn,criterion)
                 val_accuracies.append(val_accuracy)
@@ -98,4 +99,5 @@ def test(stories, lstm, rn, criterion):
         val_accuracy /= float(len(stories))
         val_loss /= float(len(stories))
 
+        assert (val_accuracy <= 1)
         return val_loss, val_accuracy
