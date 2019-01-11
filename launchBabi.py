@@ -5,8 +5,8 @@ import torch
 import argparse
 import os
 from itertools import chain
-from src.utils import files_names_test, files_names_train, saving_paths_models, load_models
-from src.train import train_sequential
+from src.utils import files_names_test, files_names_train, saving_paths_models, load_models, split_train_validation
+from src.train import train_single
 
 
 parser = argparse.ArgumentParser()
@@ -55,6 +55,7 @@ to_read_train = [files_names_train[i-1] for i in args.babi_tasks]
 stories, dictionary = read_babi(path_babi_base, to_read_train)
 stories = vectorize_babi(stories, dictionary, device)
 
+train_stories, validation_stories = split_train_validation(stories)
 dict_size = len(dictionary)
 
 print("Dictionary size: ", dict_size)
@@ -76,10 +77,9 @@ lstm.train()
 rn.train()
 
 print("Start training")
-avg_losses, accuracy = train_sequential(stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save)
+avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train_single(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save)
 
 print("End training!")
-print("Accuracy: ", accuracy)
 
 import matplotlib
 
@@ -89,8 +89,20 @@ if args.cuda:
 import matplotlib.pyplot as plt
 
 
-plt.plot(range(len(avg_losses)), avg_losses)
+plt.plot(range(len(avg_train_losses)), avg_train_losses, 'b', label='train')
+plt.plot(range(len(val_losses)), val_losses, 'r', label='val')
+plt.legend(loc='best')
+
 if args.cuda:
-    plt.savefig('training_error.png')
+    plt.savefig('loss.png')
+else:
+    plt.show()
+
+plt.plot(range(len(avg_train_accuracies)), avg_train_accuracies, 'b', label='train')
+plt.plot(range(len(val_accuracies)), val_accuracies, 'r', label='val')
+plt.legend(loc='best')
+
+if args.cuda:
+    plt.savefig('accuracy.png')
 else:
     plt.show()

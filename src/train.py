@@ -1,14 +1,19 @@
 import torch
 from src.utils import save_models, saving_paths_models
 
-def train_sequential(stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save):
+def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save):
 
-    accuracy = 0
-    losses = []
-    avg_losses = []
+    avg_train_accuracies = []
+    accuracies = 0.
+    avg_train_losses = []
+    losses = 0.
+
+    val_accuracies = [0.]
+    val_losses = []
+
     for i in range(epochs):
         s = 1
-        for question, answer, facts in stories: # for each story
+        for question, answer, facts in train_stories: # for each story
 
             lstm.zero_grad()
             rn.zero_grad()
@@ -31,21 +36,57 @@ def train_sequential(stories, epochs, lstm, rn, criterion, optimizer, print_ever
             with torch.no_grad():
                 predicted = torch.argmax(torch.sigmoid(rr)).item()
                 if predicted == answer:
-                    accuracy += 1
-                #print(dictionary[predicted], ": ", q[3])
+                    accuracies += 1.
 
-            losses.append(loss.item())
+            losses += loss.item()
 
             if ( (s %  print_every) == 0):
-                print("Epoch ", i, ": ", s, " / ", len(stories))
-                avg_losses.append(sum(losses)/float(len(losses)))
+                print("Epoch ", i, ": ", s, " / ", len(train_stories))
+                avg_train_losses.append(losses/float(print_every))
+                avg_train_accuracies.append(accuracies/float(print_every))
 
-                if (not no_save) and (len(avg_losses) > 1):
-                    if avg_losses[-1] < avg_losses[-2]:
+                val_loss, val_accuracy = test(validation_stories,lstm,rn,criterion)
+                val_accuracies.append(val_accuracy)
+                val_losses.append(val_loss)
+
+                if not no_save:
+                    if val_accuracies[-1] > val_accuracies[-2]:
                         save_models([lstm, rn], saving_paths_models)
 
-                losses = []
+                losses =  0.
+                accuracies = 0.
 
             s += 1
 
-    return avg_losses, accuracy
+    return avg_train_losses, avg_train_accuracies, val_losses, val_accuracies[1:]
+
+def test(stories, lstm, rn, criterion):
+
+    val_loss = 0.
+    val_accuracy = 0.
+
+    with torch.no_grad():
+        for question, answer, facts in stories: # for each story
+
+            h_q, h_f = lstm.reset_hidden_state(facts.size(0))
+
+            question_emb, h_q = lstm.process_query(question, h_q)
+            question_emb = question_emb.squeeze()[-1,:]
+
+            facts_emb, h_f = lstm.process_facts(facts, h_f)
+            facts_emb = facts_emb[:,-1,:]
+
+            rr = rn(facts_emb, question_emb)
+
+            loss = criterion(rr.unsqueeze(0), answer)
+
+            val_loss += loss.item()
+
+            predicted = torch.argmax(torch.sigmoid(rr)).item()
+            if predicted == answer:
+                val_accuracy += 1
+
+        val_accuracy /= float(len(stories))
+        val_loss /= float(len(stories))
+
+        return val_loss, val_accuracy

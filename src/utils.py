@@ -1,4 +1,18 @@
 import torch
+from sklearn.model_selection import train_test_split
+
+def split_train_validation(stories, perc_validation=0.2, shuffle=True):
+    '''
+    :param stories: stories structure already vectorized
+
+    :return train_stories: 100*(1-perc_validation)% of stories
+    :return validation_stories: 100*perc_validation% stories
+    '''
+    
+    train_stories, validation_stories = train_test_split(stories, test_size=perc_validation, shuffle=shuffle)
+
+    return train_stories, validation_stories
+
 
 def save_models(models, paths):
     '''

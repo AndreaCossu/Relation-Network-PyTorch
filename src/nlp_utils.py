@@ -74,8 +74,6 @@ def read_babi(path_babi, to_read, only_relevant=False):
 
                     facts_substory = list(facts)
 
-                    #question_tokens = list(map(dictionary.index, question_tokens))
-
                     stories.append([question_tokens, answer, facts_substory])
 
                 else:
@@ -86,7 +84,6 @@ def read_babi(path_babi, to_read, only_relevant=False):
                         if el not in dictionary:
                             dictionary.append(str(el))
 
-                    #tokens = list(map(dictionary.index, tokens))
                     facts.append(tokens)
 
     return stories, dictionary
