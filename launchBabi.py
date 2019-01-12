@@ -76,39 +76,42 @@ optimizer = torch.optim.Adam(chain(lstm.parameters(), rn.parameters()), args.lea
 
 criterion = torch.nn.CrossEntropyLoss()
 
-print("Start training")
-avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train_single(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save)
+if args.epochs > 0:
+    print("Start training")
+    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train_single(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save)
+    print("End training!")
 
+print("Testing...")
 avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion)
 
-print("End training!")
 print("Test accuracy: ", avg_test_accuracy)
 print("Test loss: ", avg_test_loss)
 
-import matplotlib
+if args.epochs > 0:
+    import matplotlib
 
-if args.cuda:
-    matplotlib.use('Agg')
+    if args.cuda:
+        matplotlib.use('Agg')
 
-import matplotlib.pyplot as plt
+        import matplotlib.pyplot as plt
 
 
-plt.figure()
-plt.plot(range(len(avg_train_losses)), avg_train_losses, 'b', label='train')
-plt.plot(range(len(val_losses)), val_losses, 'r', label='val')
-plt.legend(loc='best')
+    plt.figure()
+    plt.plot(range(len(avg_train_losses)), avg_train_losses, 'b', label='train')
+    plt.plot(range(len(val_losses)), val_losses, 'r', label='val')
+    plt.legend(loc='best')
 
-if args.cuda:
-    plt.savefig('loss.png')
-else:
-    plt.show()
+    if args.cuda:
+        plt.savefig('loss.png')
+    else:
+        plt.show()
 
-plt.figure()
-plt.plot(range(len(avg_train_accuracies)), avg_train_accuracies, 'b', label='train')
-plt.plot(range(len(val_accuracies)), val_accuracies, 'r', label='val')
-plt.legend(loc='best')
+    plt.figure()
+    plt.plot(range(len(avg_train_accuracies)), avg_train_accuracies, 'b', label='train')
+    plt.plot(range(len(val_accuracies)), val_accuracies, 'r', label='val')
+    plt.legend(loc='best')
 
-if args.cuda:
-    plt.savefig('accuracy.png')
-else:
-    plt.show()
+    if args.cuda:
+        plt.savefig('accuracy.png')
+    else:
+        plt.show()
