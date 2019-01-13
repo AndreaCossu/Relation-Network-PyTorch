@@ -1,7 +1,8 @@
 import torch
 from src.utils import save_models, saving_paths_models, get_answer, split_train_validation
+from sklearn.utils import shuffle
 
-def train_single(stories, labels, epochs, lstm, rn, criterion, optimizer, print_every, no_save):
+def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save):
 
     avg_train_accuracies = []
     accuracies = 0.
@@ -14,8 +15,6 @@ def train_single(stories, labels, epochs, lstm, rn, criterion, optimizer, print_
 
     for i in range(epochs):
         s = 1
-
-        train_stories, validation_stories = split_train_validation(stories, labels)
 
         for question, answer, facts, _ in train_stories: # for each story
 
@@ -68,6 +67,8 @@ def train_single(stories, labels, epochs, lstm, rn, criterion, optimizer, print_
                 accuracies = 0.
 
             s += 1
+
+        train_stories = shuffle(train_stories)
 
     return avg_train_losses, avg_train_accuracies, val_losses[1:], val_accuracies
 
