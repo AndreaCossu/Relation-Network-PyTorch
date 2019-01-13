@@ -75,10 +75,10 @@ class RelationNetwork(nn.Module):
             pairs = list(itertools.permutations(x,2))
         elif self.mode == 3:
             pairs = list(itertools.product(x, repeat=2))
-        else: # mode = 4
-            pairs = []
-            for i in range(x.size(0)-1):
-                pairs.append([x[i,:], x[i+1,:]])
+        else: # mode = 4 - read facts in consecutive pairs
+            a,b = itertools.tee(x)
+            next(b, None) # discard first element
+            pairs = list(zip(a,b))
 
         return pairs
 

@@ -1,5 +1,5 @@
 import torch
-from src.utils import save_models, saving_paths_models, get_answer, split_train_validation
+from src.utils import save_models, saving_paths_models, get_answer
 from sklearn.utils import shuffle
 
 def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save):
