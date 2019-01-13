@@ -1,6 +1,25 @@
 import torch
 from sklearn.model_selection import train_test_split
 
+def get_answer(output, target, vocabulary=None):
+    '''
+    :param output: tensor representing output of the model
+    :param vocabulary: vocabulary of all the words
+
+    :return correct: 1 if the answer is correct, 0 otherwise
+    :return answer: if vocabulary is not None, the string representation of the output, else None
+    '''
+
+    idx = torch.argmax(output)
+    correct = (idx == target).item()
+
+    if vocabulary is not None:
+        answer = vocabulary[idx.item()]
+    else:
+        answer = None
+
+    return correct, answer
+
 def split_train_validation(stories, labels, perc_validation=0.2, shuffle=True):
     '''
     :param stories: stories structure already vectorized

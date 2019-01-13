@@ -1,5 +1,5 @@
 import torch
-from src.utils import save_models, saving_paths_models
+from src.utils import save_models, saving_paths_models, get_answer
 
 def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save):
 
@@ -37,9 +37,8 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
             optimizer.step()
 
             with torch.no_grad():
-                predicted = torch.argmax(torch.sigmoid(rr)).item()
-                if predicted == answer:
-                    accuracies += 1.
+                correct, _ = get_answer(rr, answer)
+                accuracies += correct
 
             losses += loss.item()
 
@@ -93,9 +92,8 @@ def test(stories, lstm, rn, criterion):
 
             val_loss += loss.item()
 
-            predicted = torch.argmax(torch.sigmoid(rr)).item()
-            if predicted == answer:
-                val_accuracy += 1
+            correct, _ = get_answer(rr, answer)
+            val_accuracy += correct
 
         val_accuracy /= float(len(stories))
         val_loss /= float(len(stories))
