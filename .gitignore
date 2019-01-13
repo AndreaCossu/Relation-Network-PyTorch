@@ -7,7 +7,8 @@ plots/
 __pycache__/
 .idea/
 
-.ipynb_checkpoints
+.ipynb_checkpoints/
+.ipynb
 
 .env
 .venv
