@@ -81,7 +81,12 @@ class RelationNetwork(nn.Module):
         :param q: query, optional.
         '''
 
-        pairs = self._generate_pairs(x)
+        if x.size(0) == 1:
+            x = x.squeeze()
+            pairs = [ [x, torch.zeros_like(x, requires_grad=False, device=self.device)] ]
+        else:
+            pairs = self._generate_pairs(x)
+
         pair_concat = torch.empty(len(pairs), self.input_dim_g, requires_grad=False, device=self.device)
 
         for i in range(len(pairs)):
