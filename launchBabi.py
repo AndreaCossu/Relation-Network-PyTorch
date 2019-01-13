@@ -10,7 +10,7 @@ from src.train import train_single, test
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--epochs', type=int, default=2)
+parser.add_argument('--epochs', type=int, default=1)
 
 parser.add_argument('--hidden_dims_g', nargs='+', type=int, default=[256, 256, 256])
 parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512])
