@@ -34,11 +34,15 @@ class MLP(nn.Module):
 
 class RelationNetwork(nn.Module):
 
-    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, device, self_loop=False, ordered=True):
+    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, device, mode=4):
         '''
         :param object_dim: Equal to LSTM hidden dim. Dimension of the single object to be taken into consideration from g.
-        :param self_loop: when True, during generation of pairs, it generates also the pair (o,o) for each object o. Default True.
-        :param ordered: when True, during generation of pairs, (o1,o2) and (o2, o1) are considered different pairs. Default True.
+        :param mode: one of {0,1,2,3,4}. Each mode specifies a way of creating pairs of objects.
+        0 creates pairs between each different object and ordering matters.
+        1 creates pairs between each (even equal) object and ordering matters.
+        2 creates pairs between each different object and ordering does not matter.
+        3 creates pairs between each (even equal) object and ordering does not matter.
+        4 creates pairs between each adjacent object following the order.
         '''
         super(RelationNetwork, self).__init__()
 
@@ -51,8 +55,7 @@ class RelationNetwork(nn.Module):
         self.hidden_dims_f = hidden_dims_f
         self.output_dim_f = output_dim_f
         self.device = device
-        self.self_loop = self_loop
-        self.ordered = ordered
+        self.mode = mode
 
         self.g = MLP(self.input_dim_g, self.hidden_dims_g, self.output_dim_g).to(self.device)
         self.f = MLP(self.input_dim_f, self.hidden_dims_f, self.output_dim_f).to(self.device)
@@ -64,14 +67,18 @@ class RelationNetwork(nn.Module):
         :return pairs: list of pairs (tuples) of the form (oi, oj)
         '''
 
-        if (not self.self_loop) and (not self.ordered):
+        if self.mode == 0:
             pairs = list(itertools.combinations(x, 2))
-        elif self.self_loop and (not self.ordered):
+        elif self.mode == 1:
             pairs = list(itertools.combinations_with_replacement(x,2))
-        elif (not self.self_loop) and self.ordered:
+        elif self.mode == 2:
             pairs = list(itertools.permutations(x,2))
-        elif self.self_loop and self.ordered:
+        elif self.mode == 3:
             pairs = list(itertools.product(x, repeat=2))
+        else: # mode = 4
+            pairs = []
+            for i in range(x.size(0)-1):
+                pairs.append([x[i,:], x[i+1,:]])
 
         return pairs
 
