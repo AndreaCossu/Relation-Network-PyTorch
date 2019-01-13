@@ -12,27 +12,27 @@ from src.train import train_single, test
 parser = argparse.ArgumentParser()
 parser.add_argument('--epochs', type=int, default=1)
 
-parser.add_argument('--hidden_dims_g', nargs='+', type=int, default=[256, 256, 256])
-parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512])
-parser.add_argument('--hidden_dim_lstm', type=int, default=32)
-parser.add_argument('--output_dim_g', type=int, default=256)
-parser.add_argument('--lstm_layers', type=int, default=1)
+parser.add_argument('--hidden_dims_g', nargs='+', type=int, default=[256, 256, 256]) # layers of relation function g
+parser.add_argument('--output_dim_g', type=int, default=256) # output dimension of relation function g
+parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512]) # layers of final network f
+parser.add_argument('--hidden_dim_lstm', type=int, default=32) # units of LSTM
+parser.add_argument('--lstm_layers', type=int, default=1) # layers of LSTM
 
-parser.add_argument('--emb_dim', type=int, default=50)
-parser.add_argument('--only_relevant', action="store_true")
+parser.add_argument('--emb_dim', type=int, default=50) # word embedding dimension
+parser.add_argument('--only_relevant', action="store_true") # read only relevant fact from babi dataset
 
 # which babi task to train and test
 # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 parser.add_argument('--babi_tasks', nargs='+', type=int, default=[1])
 
+# optimizer parameters
 parser.add_argument('--weight_decay', type=float, default=0)
 parser.add_argument('--learning_rate', type=float, default=2e-4)
-parser.add_argument('--batch_size_lstm', type=int, default=1)
 
-parser.add_argument('--cuda', action="store_true")
-parser.add_argument('--load', action="store_true")
-parser.add_argument('--no_save', action="store_true")
-parser.add_argument('--print_every', type=int, default=500)
+parser.add_argument('--cuda', action="store_true") # use gpu
+parser.add_argument('--load', action="store_true") # load saved model (files must be named rn.pt and lstm.pt inside models/)
+parser.add_argument('--no_save', action="store_true") # disable model saving
+parser.add_argument('--print_every', type=int, default=500) # print information every print_every steps
 args = parser.parse_args()
 
 mode = 'cpu'
@@ -44,6 +44,8 @@ if args.cuda:
         print("WARNING: No GPU found. Using CPUs...")
 else:
     print('Using 0 GPUs')
+
+batch_size_lstm = 1 # keep 1
 
 device = torch.device(mode)
 
@@ -65,7 +67,7 @@ dict_size = len(dictionary)
 print("Dictionary size: ", dict_size)
 print("Done reading babi!")
 
-lstm = LSTM(args.hidden_dim_lstm, args.batch_size_lstm, dict_size, args.emb_dim, device)
+lstm = LSTM(args.hidden_dim_lstm, batch_size_lstm, dict_size, args.emb_dim, args.lstm_layers, device)
 
 rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size,
                      device)
