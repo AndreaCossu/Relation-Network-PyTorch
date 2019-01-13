@@ -1,15 +1,17 @@
 import torch
 from sklearn.model_selection import train_test_split
 
-def split_train_validation(stories, perc_validation=0.2, shuffle=True):
+def split_train_validation(stories, labels, perc_validation=0.2, shuffle=True):
     '''
     :param stories: stories structure already vectorized
+    :param labels: list of task ids of the stories
 
     :return train_stories: 100*(1-perc_validation)% of stories
     :return validation_stories: 100*perc_validation% stories
     '''
-    
-    train_stories, validation_stories = train_test_split(stories, test_size=perc_validation, shuffle=shuffle)
+
+    # stratify maintains the same percentage of babi tasks for train and validation
+    train_stories, validation_stories = train_test_split(stories, test_size=perc_validation, shuffle=shuffle, stratify=labels)
 
     return train_stories, validation_stories
 

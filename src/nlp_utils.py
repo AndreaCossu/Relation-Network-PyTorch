@@ -12,7 +12,7 @@ def vectorize_babi(stories, dictionary, device):
     '''
     stories_v = []
 
-    for q, a, facts in stories:
+    for q, a, facts, label in stories:
         q_v = torch.tensor([dictionary.index(el) for el in q], device=device).long()
         a_v = torch.tensor([dictionary.index(a)], device=device).long()
         facts_v = []
@@ -21,28 +21,35 @@ def vectorize_babi(stories, dictionary, device):
 
         facts_padded = torch.nn.utils.rnn.pad_sequence(facts_v, batch_first=True)
 
-        stories_v.append([q_v, a_v, facts_padded])
+        stories_v.append([q_v, a_v, facts_padded, label])
 
     return stories_v
 
 
-def read_babi(path_babi, to_read, only_relevant=False):
+def read_babi(path_babi, to_read, babi_tasks, only_relevant=False):
     '''
     :param path_babi: absolute path to babi file to parse
     :param to_read: list of babi tasks filenames to parse
+    :param babi_tasks: list of ids of tasks to process
     :param only_relevant: if True returns only relevant facts for each question, else return all previous facts inside the story. Default False.
 
     :return stories: list of lists. Each sublist is a list containing:
             0) question - list of words
             1) answer - single word
             2) facts - list of list of words, one list for each fact
+            3) task - id of the task of the story
 
     :return dictionary: a list containing all the words in the babi files
+
+    :return labels: list of task label for each story in stories
     '''
 
+    labels = []
     dictionary = ['PAD']
     stories = []
-    for file in to_read:
+
+    for task in range(len(babi_tasks)):
+        file = to_read[task]
         with open(path_babi + file) as f:
 
             for line in f:
@@ -74,7 +81,8 @@ def read_babi(path_babi, to_read, only_relevant=False):
 
                     facts_substory = list(facts)
 
-                    stories.append([question_tokens, answer, facts_substory])
+                    labels.append(task)
+                    stories.append([question_tokens, answer, facts_substory, task])
 
                 else:
                     # fact
@@ -86,4 +94,4 @@ def read_babi(path_babi, to_read, only_relevant=False):
 
                     facts.append(tokens)
 
-    return stories, dictionary
+    return stories, dictionary, labels

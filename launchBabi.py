@@ -52,12 +52,12 @@ print("Reading babi")
 
 to_read_test = [files_names_test[i-1] for i in args.babi_tasks]
 to_read_train = [files_names_train[i-1] for i in args.babi_tasks]
-stories, dictionary = read_babi(path_babi_base, to_read_train)
+stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks)
 stories = vectorize_babi(stories, dictionary, device)
 
-train_stories, validation_stories = split_train_validation(stories)
+train_stories, validation_stories = split_train_validation(stories, labels)
 
-test_stories, _ = read_babi(path_babi_base, to_read_test)
+test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks)
 test_stories = vectorize_babi(test_stories, dictionary, device)
 
 dict_size = len(dictionary)
