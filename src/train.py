@@ -8,8 +8,9 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
     avg_train_losses = []
     losses = 0.
 
-    val_accuracies = [0.]
-    val_losses = []
+    val_accuracies = []
+    val_losses = [1000.]
+    best_val = val_losses[0]
 
     for i in range(epochs):
         s = 1
@@ -53,8 +54,9 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
                 val_losses.append(val_loss)
 
                 if not no_save:
-                    if val_accuracies[-1] > val_accuracies[-2]:
+                    if val_losses[-1] < best_val:
                         save_models([lstm, rn], saving_paths_models)
+                        best_val = val_losses[-1]
 
                 print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
                 print("Train accuracy: ", avg_train_accuracies[-1], ". Validation accuracy: ", val_accuracies[-1])
@@ -65,7 +67,7 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
             s += 1
             #print(s)
 
-    return avg_train_losses, avg_train_accuracies, val_losses, val_accuracies[1:]
+    return avg_train_losses, avg_train_accuracies, val_losses[1:], val_accuracies
 
 def test(stories, lstm, rn, criterion):
 
