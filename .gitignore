@@ -8,7 +8,7 @@ __pycache__/
 .idea/
 
 .ipynb_checkpoints/
-.ipynb
+iter_vs_loop_performances.ipynb
 
 .env
 .venv
