@@ -13,7 +13,7 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
 
     for i in range(epochs):
         s = 1
-        for question, answer, facts in train_stories: # for each story
+        for question, answer, facts, _ in train_stories: # for each story
 
             rn.train()
             lstm.train()
@@ -76,7 +76,7 @@ def test(stories, lstm, rn, criterion):
     lstm.eval()
 
     with torch.no_grad():
-        for question, answer, facts in stories: # for each story
+        for question, answer, facts, _ in stories: # for each story
 
             h_q, h_f = lstm.reset_hidden_state(facts.size(0))
 
