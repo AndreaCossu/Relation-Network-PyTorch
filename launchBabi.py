@@ -56,8 +56,6 @@ to_read_train = [files_names_train[i-1] for i in args.babi_tasks]
 stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
 stories = vectorize_babi(stories, dictionary, device)
 
-train_stories, validation_stories = split_train_validation(stories, labels)
-
 test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks, only_relevant=args.only_relevant)
 test_stories = vectorize_babi(test_stories, dictionary, device)
 
@@ -79,7 +77,7 @@ criterion = torch.nn.CrossEntropyLoss()
 
 if args.epochs > 0:
     print("Start training")
-    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train_single(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save)
+    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train_single(stories, labels, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save)
     print("End training!")
 
 print("Testing...")
