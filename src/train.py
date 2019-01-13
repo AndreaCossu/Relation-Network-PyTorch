@@ -64,6 +64,7 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
                 accuracies = 0.
 
             s += 1
+            print(s)
 
     return avg_train_losses, avg_train_accuracies, val_losses, val_accuracies[1:]
 

@@ -19,6 +19,7 @@ parser.add_argument('--output_dim_g', type=int, default=256)
 parser.add_argument('--lstm_layers', type=int, default=1)
 
 parser.add_argument('--emb_dim', type=int, default=50)
+parser.add_argument('--only_relevant', action="store_true")
 
 # which babi task to train and test
 # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
@@ -52,12 +53,12 @@ print("Reading babi")
 
 to_read_test = [files_names_test[i-1] for i in args.babi_tasks]
 to_read_train = [files_names_train[i-1] for i in args.babi_tasks]
-stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks)
+stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
 stories = vectorize_babi(stories, dictionary, device)
 
 train_stories, validation_stories = split_train_validation(stories, labels)
 
-test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks)
+test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks, only_relevant=args.only_relevant)
 test_stories = vectorize_babi(test_stories, dictionary, device)
 
 dict_size = len(dictionary)

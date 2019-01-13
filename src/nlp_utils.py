@@ -50,6 +50,8 @@ def read_babi(path_babi, to_read, babi_tasks, only_relevant=False):
 
     for task in range(len(babi_tasks)):
         file = to_read[task]
+        label = babi_tasks[task]
+
         with open(path_babi + file) as f:
 
             for line in f:
@@ -59,7 +61,7 @@ def read_babi(path_babi, to_read, babi_tasks, only_relevant=False):
 
                 if index == 1:
                     # new story has started
-                    facts = []
+                    facts = {}
 
 
                 if '?' in tokens:
@@ -78,11 +80,11 @@ def read_babi(path_babi, to_read, babi_tasks, only_relevant=False):
                     if only_relevant:
                         support = list(map(int, tokens[question_index+2:]))
                         facts_substory = list([facts[idx] for idx in support])
+                    else:
+                        facts_substory = list(facts.values())
 
-                    facts_substory = list(facts)
-
-                    labels.append(task)
-                    stories.append([question_tokens, answer, facts_substory, task])
+                    labels.append(label)
+                    stories.append([question_tokens, answer, facts_substory, label])
 
                 else:
                     # fact
@@ -92,6 +94,6 @@ def read_babi(path_babi, to_read, babi_tasks, only_relevant=False):
                         if el not in dictionary:
                             dictionary.append(str(el))
 
-                    facts.append(tokens)
+                    facts[index] = tokens
 
     return stories, dictionary, labels
