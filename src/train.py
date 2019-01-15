@@ -1,6 +1,7 @@
 import torch
 from src.utils import save_models, saving_paths_models, get_answer
 from sklearn.utils import shuffle
+from collections import defaultdict
 
 def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save):
 
@@ -103,5 +104,48 @@ def test(stories, lstm, rn, criterion):
         val_accuracy /= float(len(stories))
         val_loss /= float(len(stories))
 
-        assert (val_accuracy <= 1)
+        return val_loss, val_accuracy
+
+def final_test(stories, lstm, rn, criterion):
+
+    val_loss = defaultdict(float)
+    val_accuracy = defaultdict(float)
+
+    rn.eval()
+    lstm.eval()
+
+    with torch.no_grad():
+
+        curr_task = stories[0][3]
+        i = 0
+        for question, answer, facts, task in stories: # for each story
+
+            if curr_task != task:
+                val_accuracy[curr_task] /= float(i)
+                val_loss[curr_task] /= float(i)
+                curr_task = task
+                i=0
+
+            h_q, h_f = lstm.reset_hidden_state(facts.size(0))
+
+            question_emb, h_q = lstm.process_query(question, h_q)
+            question_emb = question_emb.squeeze()[-1,:]
+
+            facts_emb, h_f = lstm.process_facts(facts, h_f)
+            facts_emb = facts_emb[:,-1,:]
+
+            rr = rn(facts_emb, question_emb)
+
+            loss = criterion(rr.unsqueeze(0), answer)
+
+            val_loss[task] += loss.item()
+
+            correct, _ = get_answer(rr, answer)
+            val_accuracy[task] += correct
+
+            i += 1
+
+        val_accuracy[curr_task] /= float(i)
+        val_loss[curr_task] /= float(i)
+        
         return val_loss, val_accuracy

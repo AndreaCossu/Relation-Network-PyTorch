@@ -6,7 +6,7 @@ import argparse
 import os
 from itertools import chain
 from src.utils import files_names_test, files_names_train, saving_paths_models, load_models, split_train_validation
-from src.train import train_single, test
+from src.train import train_single, test, final_test
 
 
 parser = argparse.ArgumentParser()
@@ -28,7 +28,7 @@ parser.add_argument('--babi_tasks', nargs='+', type=int, default=[1], help='whic
 parser.add_argument('--weight_decay', type=float, default=0, help='optimizer hyperparameter')
 parser.add_argument('--learning_rate', type=float, default=2e-4, help='optimizer hyperparameter')
 
-parser.add_argument('--cuda', action="store_true", help='use gpu') 
+parser.add_argument('--cuda', action="store_true", help='use gpu')
 parser.add_argument('--load', action="store_true", help=' load saved model (files must be named rn.pt and lstm.pt inside models/)')
 parser.add_argument('--no_save', action="store_true", help='disable model saving')
 parser.add_argument('--print_every', type=int, default=500, help='print information every print_every steps')
@@ -54,6 +54,7 @@ print("Reading babi")
 
 to_read_test = [files_names_test[i-1] for i in args.babi_tasks]
 to_read_train = [files_names_train[i-1] for i in args.babi_tasks]
+
 stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
 stories = vectorize_babi(stories, dictionary, device)
 
@@ -84,10 +85,10 @@ if args.epochs > 0:
     print("End training!")
 
 print("Testing...")
-avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion)
+avg_test_loss, avg_test_accuracy = final_test(test_stories, lstm, rn, criterion)
 
-print("Test accuracy: ", avg_test_accuracy)
-print("Test loss: ", avg_test_loss)
+print("Test accuracy: ", dict(avg_test_accuracy))
+print("Test loss: ", dict(avg_test_loss))
 
 if args.epochs > 0:
     import matplotlib
@@ -95,7 +96,7 @@ if args.epochs > 0:
     if args.cuda:
         matplotlib.use('Agg')
 
-        import matplotlib.pyplot as plt
+    import matplotlib.pyplot as plt
 
 
     plt.figure()
