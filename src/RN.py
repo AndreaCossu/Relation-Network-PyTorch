@@ -5,11 +5,12 @@ import itertools
 
 class MLP(nn.Module):
 
-    def __init__(self, input_dim, hidden_dims, output_dim):
+    def __init__(self, input_dim, hidden_dims, output_dim, g=False):
         super(MLP, self).__init__()
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims
         self.output_dim = output_dim
+        self.g = g
 
         self.linears = nn.ModuleList([nn.Linear(self.input_dim, self.hidden_dims[0])])
 
@@ -29,6 +30,8 @@ class MLP(nn.Module):
             #x = self.dropout(x)
 
         out = self.linears[-1](x)
+        if self.g:
+            out = F.relu(out)
 
         return out
 
@@ -57,7 +60,7 @@ class RelationNetwork(nn.Module):
         self.device = device
         self.mode = mode
 
-        self.g = MLP(self.input_dim_g, self.hidden_dims_g, self.output_dim_g).to(self.device)
+        self.g = MLP(self.input_dim_g, self.hidden_dims_g, self.output_dim_g, g=True).to(self.device)
         self.f = MLP(self.input_dim_f, self.hidden_dims_f, self.output_dim_f).to(self.device)
 
 
@@ -78,7 +81,7 @@ class RelationNetwork(nn.Module):
         else: # mode = 4
             a,b = itertools.tee(x) # creates two iterators on x
             next(b, None) # discard first element on the second iterator
-            pairs = list(zip(a,b)) 
+            pairs = list(zip(a,b))
 
         return pairs
 
