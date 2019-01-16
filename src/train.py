@@ -6,18 +6,18 @@ from collections import defaultdict
 def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save):
 
     avg_train_accuracies = []
-    accuracies = 0.
+    train_accuracies = []
     avg_train_losses = []
-    losses = 0.
+    train_losses = []
 
     val_accuracies = []
     val_losses = [1000.]
     best_val = val_losses[0]
 
     for i in range(epochs):
-        s = 1
 
-        for question, answer, facts, _ in train_stories: # for each story
+        for s in range(len(train_stories)):
+            question, answer, facts, _ = train_stories[s]
 
             rn.train()
             lstm.train()
@@ -42,19 +42,18 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
 
             with torch.no_grad():
                 correct, _ = get_answer(rr, answer)
-                accuracies += correct
+                train_accuracies.append(correct)
 
-            losses += loss.item()
+            train_losses.append(loss.item())
 
-            if ( (s %  print_every) == 0):
+            if ( ((s+1) %  print_every) == 0):
                 print("Epoch ", i+1, ": ", s, " / ", len(train_stories))
-                avg_train_losses.append(losses/float(print_every))
-                avg_train_accuracies.append(accuracies/float(print_every))
+                avg_train_losses.append(sum(train_losses)/len(train_losses))
+                avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
                 try:
                     assert(avg_train_accuracies[-1] <= 1)
                 except AssertionError:
-                    print(accuracies)
-                    print(float(print_every))
+                    print(train_accuracies)
                     print(avg_train_accuracies[-1])
 
                 val_loss, val_accuracy = test(validation_stories,lstm,rn,criterion)
@@ -69,10 +68,8 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
                 print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
                 print("Train accuracy: ", avg_train_accuracies[-1], ". Validation accuracy: ", val_accuracies[-1])
                 print()
-                losses =  0.
-                accuracies = 0.
-
-            s += 1
+                train_losses =  []
+                train_accuracies = []
 
         train_stories = shuffle(train_stories)
 
