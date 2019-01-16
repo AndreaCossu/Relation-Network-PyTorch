@@ -50,11 +50,6 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
                 print("Epoch ", i+1, ": ", s, " / ", len(train_stories))
                 avg_train_losses.append(sum(train_losses)/len(train_losses))
                 avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
-                try:
-                    assert(avg_train_accuracies[-1] <= 1)
-                except AssertionError:
-                    print(train_accuracies)
-                    print(avg_train_accuracies[-1])
 
                 val_loss, val_accuracy = test(validation_stories,lstm,rn,criterion)
                 val_accuracies.append(val_accuracy)

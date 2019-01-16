@@ -18,7 +18,6 @@ def get_answer(output, target, vocabulary=None):
     else:
         answer = None
 
-    assert(correct == 1 or correct == 0)
     return correct, answer
 
 def split_train_validation(stories, labels, perc_validation=0.2, shuffle=True):
