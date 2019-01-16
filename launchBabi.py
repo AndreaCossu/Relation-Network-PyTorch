@@ -6,7 +6,7 @@ import argparse
 import os
 from itertools import chain
 from src.utils import files_names_test, files_names_train, saving_paths_models, load_models, split_train_validation
-from src.train import train_single, test, final_test
+from src.train import train_single, final_test
 
 
 parser = argparse.ArgumentParser()
