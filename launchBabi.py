@@ -5,7 +5,7 @@ import torch
 import argparse
 import os
 from itertools import chain
-from src.utils import files_names_test, files_names_train, saving_paths_models, load_models, split_train_validation
+from src.utils import files_names_test, files_names_train, saving_path_models, names_models, load_models, split_train_validation
 from src.train import train_single, final_test
 
 
@@ -73,7 +73,7 @@ rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g
                      device)
 
 if args.load:
-    load_models([lstm, rn], saving_paths_models)
+    load_models([(lstm, names_models[0]), (rn, names_models[1])], saving_path_models)
 
 optimizer = torch.optim.Adam(chain(lstm.parameters(), rn.parameters()), args.learning_rate, weight_decay=args.weight_decay)
 
