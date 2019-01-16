@@ -36,29 +36,31 @@ def split_train_validation(stories, labels, perc_validation=0.2, shuffle=True):
     return train_stories, validation_stories
 
 
-def save_models(models, paths):
+def save_models(models, path):
+    '''
+    :param models: iterable of (models to save, name)
+    :param paths: saving path
+    '''
+    dict_m = {}
+    for model, name in models:
+        dict_m[name] = model.state_dict()
+
+    torch.save(dict_m, path)
+
+def load_models(models, path):
     '''
     :param models: iterable of models to save
     :param paths: iterable of saving paths
     '''
-    for i in range(len(models)):
-        torch.save(models[i].state_dict(), paths[i])
 
-def load_models(models, paths):
-    '''
-    :param models: iterable of models to save
-    :param paths: iterable of saving paths
-    '''
-
-    for i in range(len(models)):
-        models[i].load_state_dict(torch.load(paths[i]))
+    checkpoint = torch.load(path)
+    for model, name in models:
+        model.load_state_dict(checkpoint[name])
 
 
 
-saving_paths_models = [
-    'models/lstm.pt',
-    'models/rn.pt'
-]
+saving_path_models = 'models/models.tar'
+names_models = ['LSTM', 'RN']
 
 files_names_test = [
     'qa1_single-supporting-fact_test.txt',

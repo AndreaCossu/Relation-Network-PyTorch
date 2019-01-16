@@ -1,5 +1,5 @@
 import torch
-from src.utils import save_models, saving_paths_models, get_answer
+from src.utils import save_models, saving_path_models, get_answer, names_models
 from sklearn.utils import shuffle
 from collections import defaultdict
 
@@ -62,7 +62,7 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
 
                 if not no_save:
                     if val_losses[-1] < best_val:
-                        save_models([lstm, rn], saving_paths_models)
+                        save_models([(lstm, names_models[0]), (rn, names_models[1])], saving_path_models)
                         best_val = val_losses[-1]
 
                 print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
