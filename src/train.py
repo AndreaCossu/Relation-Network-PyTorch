@@ -47,7 +47,7 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
             train_losses.append(loss.item())
 
             if ( ((s+1) %  print_every) == 0):
-                print("Epoch ", i+1, ": ", s, " / ", len(train_stories))
+                print("Epoch ", i+1, ": ", s+1, " / ", len(train_stories))
                 avg_train_losses.append(sum(train_losses)/len(train_losses))
                 avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
 

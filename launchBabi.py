@@ -13,7 +13,7 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--epochs', type=int, default=1, help='epochs to train. Each epoch process all the dataset in input.')
 parser.add_argument('--hidden_dims_g', nargs='+', type=int, default=[256, 256, 256], help='layers of relation function g')
 parser.add_argument('--output_dim_g', type=int, default=256, help='output dimension of relation function g')
-parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512], help='layers of final network f')
+parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512, 128], help='layers of final network f')
 parser.add_argument('--hidden_dim_lstm', type=int, default=32, help='units of LSTM')
 parser.add_argument('--lstm_layers', type=int, default=1, help='layers of LSTM')
 
