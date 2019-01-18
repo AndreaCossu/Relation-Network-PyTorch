@@ -18,6 +18,8 @@ class MLP(nn.Module):
             self.linears.append(nn.Linear(self.hidden_dims[i-1], self.hidden_dims[i]))
         self.linears.append(nn.Linear(self.hidden_dims[-1], self.output_dim))
 
+        self.activation = torch.tanh
+
     def forward(self, x):
         '''
         :param x: (n_features)
@@ -25,17 +27,17 @@ class MLP(nn.Module):
 
         for i in range(len(self.hidden_dims)):
             x = self.linears[i](x)
-            x = F.relu(x)
+            x = self.activation(x)
 
         out = self.linears[-1](x)
         if self.g:
-            out = F.relu(out)
+            out = self.activation(out)
 
         return out
 
 class RelationNetwork(nn.Module):
 
-    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, device, mode=4):
+    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, device, mode=4, attentional=False):
         '''
         :param object_dim: Equal to LSTM hidden dim. Dimension of the single object to be taken into consideration from g.
         :param mode: one of {0,1,2,3,4}. Each mode specifies a way of creating pairs of objects.
@@ -57,9 +59,12 @@ class RelationNetwork(nn.Module):
         self.output_dim_f = output_dim_f
         self.device = device
         self.mode = mode
+        self.attentional = attentional
 
         self.g = MLP(self.input_dim_g, self.hidden_dims_g, self.output_dim_g, g=True).to(self.device)
         self.f = MLP(self.input_dim_f, self.hidden_dims_f, self.output_dim_f).to(self.device)
+
+        self.query_expand = MLP(self.query_dim, self.hidden_dims_g, self.output_dim_g, g=True).to(self.device)
 
 
     def _generate_pairs(self, x):
@@ -105,6 +110,11 @@ class RelationNetwork(nn.Module):
                 pair_concat[i, :] = torch.cat((pair[0], pair[1]))
 
         relations = self.g(pair_concat)
+
+        if self.attentional:
+            q_exp = self.query_expand(q)
+            c = F.softmax(torch.mv(relations, q_exp), dim=0)
+            relations = relations * c.view(-1,1)
 
         embedding = torch.sum(relations, dim=0) # (output_dim_g)
 
