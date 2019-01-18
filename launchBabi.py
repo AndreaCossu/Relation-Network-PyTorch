@@ -18,7 +18,7 @@ parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512], 
 parser.add_argument('--hidden_dim_lstm', type=int, default=32, help='units of LSTM')
 parser.add_argument('--lstm_layers', type=int, default=1, help='layers of LSTM')
 
-parser.add_argument('--emb_dim', type=int, default=50, help='word embedding dimension')
+parser.add_argument('--emb_dim', type=int, default=32, help='word embedding dimension')
 parser.add_argument('--only_relevant', action="store_true", help='read only relevant fact from babi dataset')
 
 
