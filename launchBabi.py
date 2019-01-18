@@ -23,6 +23,7 @@ parser.add_argument('--only_relevant', action="store_true", help='read only rele
 
 # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 parser.add_argument('--babi_tasks', nargs='+', type=int, default=[1], help='which babi task to train and test')
+parser.add_argument('--en_valid', action="store_true", help='Use en-valid-10k instead of en-10k folder of babi')
 
 # optimizer parameters
 parser.add_argument('--weight_decay', type=float, default=0, help='optimizer hyperparameter')
@@ -49,23 +50,26 @@ batch_size_lstm = 1 # keep 1
 device = torch.device(mode)
 
 cd = os.path.dirname(os.path.abspath(__file__))
-path_babi_base = cd + "/babi/en-10k/"
+if args.en_valid:
+    path_babi_base = cd + "/babi/en-valid-10k/"
+else:
+    path_babi_base = cd + "/babi/en-10k/"
+
 print("Reading babi")
 
 to_read_test = [files_names_test[i-1] for i in args.babi_tasks]
 to_read_val = [files_names_val[i-1] for i in args.babi_tasks]
 to_read_train = [files_names_train[i-1] for i in args.babi_tasks]
 
-''' # When reading from en-10k and not from en-valid-10k
-stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
-stories = vectorize_babi(stories, dictionary, device)
-train_stories, validation_stories = split_train_validation(stories, labels)
-'''
-
-train_stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
-train_stories = vectorize_babi(train_stories, dictionary, device)
-validation_stories, _, _ = read_babi(path_babi_base, to_read_val, args.babi_tasks, only_relevant=args.only_relevant)
-validation_stories = vectorize_babi(validation_stories, dictionary, device)
+if not args.en_valid: # When reading from en-10k and not from en-valid-10k
+    stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
+    stories = vectorize_babi(stories, dictionary, device)
+    train_stories, validation_stories = split_train_validation(stories, labels)
+else:
+    train_stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
+    train_stories = vectorize_babi(train_stories, dictionary, device)
+    validation_stories, _, _ = read_babi(path_babi_base, to_read_val, args.babi_tasks, only_relevant=args.only_relevant)
+    validation_stories = vectorize_babi(validation_stories, dictionary, device)
 
 test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks, only_relevant=args.only_relevant)
 test_stories = vectorize_babi(test_stories, dictionary, device)
