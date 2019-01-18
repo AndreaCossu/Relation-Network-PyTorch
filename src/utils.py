@@ -61,7 +61,77 @@ def load_models(models, path):
 saving_path_models = 'models/models.tar'
 names_models = ['LSTM', 'RN']
 
+files_names_train = [
+    'qa1_train.txt',
+    'qa2_train.txt',
+    'qa3_train.txt',
+    'qa4_train.txt',
+    'qa5_train.txt',
+    'qa6_train.txt',
+    'qa7_train.txt',
+    'qa8_train.txt',
+    'qa9_train.txt',
+    'qa10_train.txt',
+    'qa11_train.txt',
+    'qa12_train.txt',
+    'qa13_train.txt',
+    'qa14_train.txt',
+    'qa15_train.txt',
+    'qa16_train.txt',
+    'qa17_train.txt',
+    'qa18_train.txt',
+    'qa19_train.txt',
+    'qa20_train.txt'
+]
+
+files_names_val = [
+    'qa1_valid.txt',
+    'qa2_valid.txt',
+    'qa3_valid.txt',
+    'qa4_valid.txt',
+    'qa5_valid.txt',
+    'qa6_valid.txt',
+    'qa7_valid.txt',
+    'qa8_valid.txt',
+    'qa9_valid.txt',
+    'qa10_valid.txt',
+    'qa11_valid.txt',
+    'qa12_valid.txt',
+    'qa13_valid.txt',
+    'qa14_valid.txt',
+    'qa15_valid.txt',
+    'qa16_valid.txt',
+    'qa17_valid.txt',
+    'qa18_valid.txt',
+    'qa19_valid.txt',
+    'qa20_valid.txt'
+]
+
 files_names_test = [
+    'qa1_test.txt',
+    'qa2_test.txt',
+    'qa3_test.txt',
+    'qa4_test.txt',
+    'qa5_test.txt',
+    'qa6_test.txt',
+    'qa7_test.txt',
+    'qa8_test.txt',
+    'qa9_test.txt',
+    'qa10_test.txt',
+    'qa11_test.txt',
+    'qa12_test.txt',
+    'qa13_test.txt',
+    'qa14_test.txt',
+    'qa15_test.txt',
+    'qa16_test.txt',
+    'qa17_test.txt',
+    'qa18_test.txt',
+    'qa19_test.txt',
+    'qa20_test.txt'
+]
+
+
+'''files_names_test = [
     'qa1_single-supporting-fact_test.txt',
     'qa2_two-supporting-facts_test.txt',
     'qa3_three-supporting-facts_test.txt',
@@ -82,6 +152,29 @@ files_names_test = [
     'qa18_size-reasoning_test.txt',
     'qa19_path-finding_test.txt',
     'qa20_agents-motivations_test.txt',
+]
+
+files_names_val = [
+    'qa1_single-supporting-fact_train.txt',
+    'qa2_two-supporting-facts_train.txt',
+    'qa3_three-supporting-facts_train.txt',
+    'qa4_two-arg-relations_train.txt',
+    'qa5_three-arg-relations_train.txt',
+    'qa6_yes-no-questions_train.txt',
+    'qa7_counting_train.txt',
+    'qa8_lists-sets_train.txt',
+    'qa9_simple-negation_train.txt',
+    'qa10_indefinite-knowledge_train.txt',
+    'qa11_basic-coreference_train.txt',
+    'qa12_conjunction_train.txt',
+    'qa13_compound-coreference_train.txt',
+    'qa14_time-reasoning_train.txt',
+    'qa15_basic-deduction_train.txt',
+    'qa16_basic-induction_train.txt',
+    'qa17_positional-reasoning_train.txt',
+    'qa18_size-reasoning_train.txt',
+    'qa19_path-finding_train.txt',
+    'qa20_agents-motivations_train.txt'
 ]
 
 files_names_train = [
@@ -105,4 +198,4 @@ files_names_train = [
     'qa18_size-reasoning_train.txt',
     'qa19_path-finding_train.txt',
     'qa20_agents-motivations_train.txt'
-]
+]'''

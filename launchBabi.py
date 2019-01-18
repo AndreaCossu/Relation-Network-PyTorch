@@ -5,7 +5,7 @@ import torch
 import argparse
 import os
 from itertools import chain
-from src.utils import files_names_test, files_names_train, saving_path_models, names_models, load_models, split_train_validation
+from src.utils import files_names_test, files_names_train, files_names_val, saving_path_models, names_models, load_models, split_train_validation
 from src.train import train_single, final_test
 
 
@@ -53,12 +53,19 @@ path_babi_base = cd + "/babi/en-10k/"
 print("Reading babi")
 
 to_read_test = [files_names_test[i-1] for i in args.babi_tasks]
+to_read_val = [files_names_val[i-1] for i in args.babi_tasks]
 to_read_train = [files_names_train[i-1] for i in args.babi_tasks]
 
+''' # When reading from en-10k and not from en-valid-10k
 stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
 stories = vectorize_babi(stories, dictionary, device)
-
 train_stories, validation_stories = split_train_validation(stories, labels)
+'''
+
+train_stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
+train_stories = vectorize_babi(train_stories, dictionary, device)
+validation_stories, _, _ = read_babi(path_babi_base, to_read_val, args.babi_tasks, only_relevant=args.only_relevant)
+validation_stories = vectorize_babi(validation_stories, dictionary, device)
 
 test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks, only_relevant=args.only_relevant)
 test_stories = vectorize_babi(test_stories, dictionary, device)
