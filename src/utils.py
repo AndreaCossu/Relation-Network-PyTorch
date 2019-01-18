@@ -61,7 +61,7 @@ def load_models(models, path):
 saving_path_models = 'models/models.tar'
 names_models = ['LSTM', 'RN']
 
-files_names_train = [
+files_names_train_en_valid = [
     'qa1_train.txt',
     'qa2_train.txt',
     'qa3_train.txt',
@@ -84,7 +84,7 @@ files_names_train = [
     'qa20_train.txt'
 ]
 
-files_names_val = [
+files_names_val_en_valid = [
     'qa1_valid.txt',
     'qa2_valid.txt',
     'qa3_valid.txt',
@@ -107,7 +107,7 @@ files_names_val = [
     'qa20_valid.txt'
 ]
 
-files_names_test = [
+files_names_test_en_valid = [
     'qa1_test.txt',
     'qa2_test.txt',
     'qa3_test.txt',
@@ -131,7 +131,7 @@ files_names_test = [
 ]
 
 
-'''files_names_test = [
+files_names_test_en = [
     'qa1_single-supporting-fact_test.txt',
     'qa2_two-supporting-facts_test.txt',
     'qa3_three-supporting-facts_test.txt',
@@ -154,7 +154,7 @@ files_names_test = [
     'qa20_agents-motivations_test.txt',
 ]
 
-files_names_val = [
+files_names_train_en = [
     'qa1_single-supporting-fact_train.txt',
     'qa2_two-supporting-facts_train.txt',
     'qa3_three-supporting-facts_train.txt',
@@ -176,26 +176,3 @@ files_names_val = [
     'qa19_path-finding_train.txt',
     'qa20_agents-motivations_train.txt'
 ]
-
-files_names_train = [
-    'qa1_single-supporting-fact_train.txt',
-    'qa2_two-supporting-facts_train.txt',
-    'qa3_three-supporting-facts_train.txt',
-    'qa4_two-arg-relations_train.txt',
-    'qa5_three-arg-relations_train.txt',
-    'qa6_yes-no-questions_train.txt',
-    'qa7_counting_train.txt',
-    'qa8_lists-sets_train.txt',
-    'qa9_simple-negation_train.txt',
-    'qa10_indefinite-knowledge_train.txt',
-    'qa11_basic-coreference_train.txt',
-    'qa12_conjunction_train.txt',
-    'qa13_compound-coreference_train.txt',
-    'qa14_time-reasoning_train.txt',
-    'qa15_basic-deduction_train.txt',
-    'qa16_basic-induction_train.txt',
-    'qa17_positional-reasoning_train.txt',
-    'qa18_size-reasoning_train.txt',
-    'qa19_path-finding_train.txt',
-    'qa20_agents-motivations_train.txt'
-]'''

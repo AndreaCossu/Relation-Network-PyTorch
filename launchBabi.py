@@ -5,7 +5,8 @@ import torch
 import argparse
 import os
 from itertools import chain
-from src.utils import files_names_test, files_names_train, files_names_val, saving_path_models, names_models, load_models, split_train_validation
+from src.utils import files_names_test_en, files_names_train_en, files_names_test_en_valid, files_names_train_en_valid, files_names_val_en_valid
+from src.utils import saving_path_models, names_models, load_models, split_train_validation
 from src.train import train_single, final_test
 
 
@@ -50,16 +51,20 @@ batch_size_lstm = 1 # keep 1
 device = torch.device(mode)
 
 cd = os.path.dirname(os.path.abspath(__file__))
+
 if args.en_valid:
     path_babi_base = cd + "/babi/en-valid-10k/"
+    to_read_test = [files_names_test_en_valid[i-1] for i in args.babi_tasks]
+    to_read_val = [files_names_val_en_valid[i-1] for i in args.babi_tasks]
+    to_read_train = [files_names_train_en_valid[i-1] for i in args.babi_tasks]
 else:
     path_babi_base = cd + "/babi/en-10k/"
+    to_read_test = [files_names_test_en[i-1] for i in args.babi_tasks]
+    to_read_train = [files_names_train_en[i-1] for i in args.babi_tasks]
 
 print("Reading babi")
 
-to_read_test = [files_names_test[i-1] for i in args.babi_tasks]
-to_read_val = [files_names_val[i-1] for i in args.babi_tasks]
-to_read_train = [files_names_train[i-1] for i in args.babi_tasks]
+
 
 if not args.en_valid: # When reading from en-10k and not from en-valid-10k
     stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
