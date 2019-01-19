@@ -58,7 +58,7 @@ def load_models(models, path):
 
 
 
-saving_path_models = 'models/models.tar'
+saving_path_rn = 'models/rn.tar'
 names_models = ['LSTM', 'RN']
 
 files_names_train_en_valid = [
