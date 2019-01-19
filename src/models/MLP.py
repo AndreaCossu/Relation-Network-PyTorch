@@ -3,12 +3,16 @@ import torch.nn as nn
 
 class MLP(nn.Module):
 
-    def __init__(self, input_dim, hidden_dims, output_dim, g=False):
+    def __init__(self, input_dim, hidden_dims, output_dim, nonlinear=False):
+        '''
+        :param nonlinear: if False last layer is linear, if True is nonlinear. Default False.
+        '''
+
         super(MLP, self).__init__()
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims
         self.output_dim = output_dim
-        self.g = g
+        self.nonlinear = nonlinear
 
         self.linears = nn.ModuleList([nn.Linear(self.input_dim, self.hidden_dims[0])])
 
@@ -28,7 +32,7 @@ class MLP(nn.Module):
             x = self.activation(x)
 
         out = self.linears[-1](x)
-        if self.g:
+        if self.nonlinear:
             out = self.activation(out)
 
         return out

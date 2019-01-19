@@ -30,10 +30,10 @@ class RelationNetwork(nn.Module):
         self.mode = mode
         self.attentional = attentional
 
-        self.g = MLP(self.input_dim_g, self.hidden_dims_g, self.output_dim_g, g=True).to(self.device)
+        self.g = MLP(self.input_dim_g, self.hidden_dims_g, self.output_dim_g, nonlinear=True).to(self.device)
         self.f = MLP(self.input_dim_f, self.hidden_dims_f, self.output_dim_f).to(self.device)
 
-        self.query_expand = MLP(self.query_dim, self.hidden_dims_g, self.output_dim_g, g=True).to(self.device)
+        self.query_expand = MLP(self.query_dim, self.hidden_dims_g, self.output_dim_g, nonlinear=True).to(self.device)
 
 
     def _generate_pairs(self, x):
