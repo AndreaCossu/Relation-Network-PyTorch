@@ -17,6 +17,7 @@ This implementation tests the Relation Network model (RN) and the Recurrent Rela
 
 # Train and test RN
 * Model implementation is inside `src/models/RN.py`
+* Train and test functions are inside `task/babi_task/rn/train.py`
 * The main script is `launch_rn_babi.py`.
   * Run it with `python launch_rn_babi.py [options]`.
   * Options are listed and explained with `python launch_rn_babi.py --help`.
