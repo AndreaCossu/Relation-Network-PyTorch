@@ -1,6 +1,6 @@
 babi/
 CLEVR/
-models/
+saved_models/
 plots/
 
 __pycache__/
