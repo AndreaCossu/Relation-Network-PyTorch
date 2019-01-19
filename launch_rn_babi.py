@@ -7,7 +7,7 @@ import os
 from itertools import chain
 from src.utils import files_names_test_en, files_names_train_en, files_names_test_en_valid, files_names_train_en_valid, files_names_val_en_valid
 from src.utils import saving_path_rn, names_models, load_models, split_train_validation
-from task.babi.rn.train import train_single, final_test
+from task.babi_task.rn.train import train_single, final_test
 
 
 parser = argparse.ArgumentParser()
