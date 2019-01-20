@@ -27,11 +27,12 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
 
             h_q, h_f = lstm.reset_hidden_state(facts.size(0))
 
-            question_emb, h_q = lstm.process_query(question, h_q)
-            question_emb = question_emb.squeeze()[-1,:]
+            h_q = lstm.process_query(question, h_q)
+            question_emb = h_q[0].squeeze()
 
-            facts_emb, h_f = lstm.process_facts(facts, h_f)
-            facts_emb = facts_emb[:,-1,:]
+
+            h_f = lstm.process_facts(facts, h_f)
+            facts_emb = h_f[0].squeeze()
 
             rr = rn(facts_emb, question_emb)
 
@@ -83,11 +84,11 @@ def test(stories, lstm, rn, criterion):
 
             h_q, h_f = lstm.reset_hidden_state(facts.size(0))
 
-            question_emb, h_q = lstm.process_query(question, h_q)
-            question_emb = question_emb.squeeze()[-1,:]
+            h_q = lstm.process_query(question, h_q)
+            question_emb = h_q[0].squeeze()
 
-            facts_emb, h_f = lstm.process_facts(facts, h_f)
-            facts_emb = facts_emb[:,-1,:]
+            h_f = lstm.process_facts(facts, h_f)
+            facts_emb = h_f[0].squeeze()
 
             rr = rn(facts_emb, question_emb)
 
@@ -125,11 +126,11 @@ def final_test(stories, lstm, rn, criterion):
 
             h_q, h_f = lstm.reset_hidden_state(facts.size(0))
 
-            question_emb, h_q = lstm.process_query(question, h_q)
-            question_emb = question_emb.squeeze()[-1,:]
+            h_q = lstm.process_query(question, h_q)
+            question_emb = h_q[0].squeeze()
 
-            facts_emb, h_f = lstm.process_facts(facts, h_f)
-            facts_emb = facts_emb[:,-1,:]
+            h_f = lstm.process_facts(facts, h_f)
+            facts_emb = h_f[0].squeeze()
 
             rr = rn(facts_emb, question_emb)
 

@@ -20,17 +20,17 @@ class LSTM(nn.Module):
     def process_query(self, x, h):
 
         emb = self.embeddings(x)
-        processed, h = self.lstm_q(emb.unsqueeze(0), h)
+        _, h = self.lstm_q(emb.unsqueeze(0), h)
 
-        return processed, h
+        return h
 
     def process_facts(self, x, h):
 
         emb = self.embeddings(x)
 
-        processed, h = self.lstm_f(emb, h)
+        _, h = self.lstm_f(emb, h)
 
-        return processed, h
+        return h
 
     def reset_hidden_state(self, b):
         # hidden is composed by hidden and cell state vectors
