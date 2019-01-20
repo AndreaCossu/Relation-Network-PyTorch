@@ -83,10 +83,10 @@ dict_size = len(dictionary)
 print("Dictionary size: ", dict_size)
 print("Done reading babi!")
 
-lstm = LSTM(args.hidden_dim_lstm, batch_size_lstm, dict_size, args.emb_dim, args.lstm_layers, device)
+lstm = LSTM(args.hidden_dim_lstm, batch_size_lstm, dict_size, args.emb_dim, args.lstm_layers, device).to(device)
 
 rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size,
-                     device)
+                     device).to(device)
 
 if args.load:
     load_models([(lstm, names_models[0]), (rn, names_models[1])], saving_path_rn)
