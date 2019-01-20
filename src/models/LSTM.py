@@ -35,12 +35,12 @@ class LSTM(nn.Module):
     def reset_hidden_state(self, b):
         # hidden is composed by hidden and cell state vectors
         h_q = (
-            torch.randn(self.layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True),
-            torch.randn(self.layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True)
+            torch.zeros(self.layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True),
+            torch.zeros(self.layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True)
             )
 
         h_f = (
-            torch.randn(self.layers, b, self.hidden_dim, device=self.device, requires_grad=True),
-            torch.randn(self.layers, b, self.hidden_dim, device=self.device, requires_grad=True)
+            torch.zeros(self.layers, b, self.hidden_dim, device=self.device, requires_grad=True),
+            torch.zeros(self.layers, b, self.hidden_dim, device=self.device, requires_grad=True)
             )
         return h_q, h_f
