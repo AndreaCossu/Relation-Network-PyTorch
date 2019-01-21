@@ -20,6 +20,7 @@ parser.add_argument('--lstm_layers', type=int, default=1, help='layers of LSTM')
 
 parser.add_argument('--emb_dim', type=int, default=32, help='word embedding dimension')
 parser.add_argument('--only_relevant', action="store_true", help='read only relevant fact from babi dataset')
+parser.add_argument('--batch_size_stories', type=int, default=10, help='stories batch size')
 
 
 # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
@@ -46,8 +47,6 @@ if args.cuda:
 else:
     print('Using 0 GPUs')
 
-batch_size_lstm = 1 # keep 1
-
 device = torch.device(mode)
 
 cd = os.path.dirname(os.path.abspath(__file__))
@@ -68,25 +67,25 @@ print("Reading babi")
 
 if not args.en_valid: # When reading from en-10k and not from en-valid-10k
     stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
-    stories = vectorize_babi(stories, dictionary, device)
     train_stories, validation_stories = split_train_validation(stories, labels)
+    train_stories = vectorize_babi(train_stories, dictionary, args.batch_size_stories, device)
+    validation_stories = vectorize_babi(validation_stories, dictionary, args.batch_size_stories, device)
 else:
     train_stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
-    train_stories = vectorize_babi(train_stories, dictionary, device)
+    train_stories = vectorize_babi(train_stories, dictionary, args.batch_size_stories, device)
     validation_stories, _, _ = read_babi(path_babi_base, to_read_val, args.babi_tasks, only_relevant=args.only_relevant)
-    validation_stories = vectorize_babi(validation_stories, dictionary, device)
+    validation_stories = vectorize_babi(validation_stories, dictionary, args.batch_size_stories, device)
 
 test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks, only_relevant=args.only_relevant)
-test_stories = vectorize_babi(test_stories, dictionary, device)
+test_stories = vectorize_babi(test_stories, dictionary, args.batch_size_stories, device)
 
 dict_size = len(dictionary)
 print("Dictionary size: ", dict_size)
 print("Done reading babi!")
 
-lstm = LSTM(args.hidden_dim_lstm, batch_size_lstm, dict_size, args.emb_dim, args.lstm_layers, device).to(device)
+lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_dim, args.lstm_layers, device).to(device)
 
-rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size,
-                     device).to(device)
+rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.batch_size_stories, device).to(device)
 
 if args.load:
     load_models([(lstm, names_models[0]), (rn, names_models[1])], saving_path_rn)

@@ -7,8 +7,13 @@ def vectorize_babi(stories, dictionary, batch_size, device):
     :param stories: structure produced by read_babi function
     :param dictionary: list of words produced by read_babi function
 
-    :return stories_v: the new stories structure with torch.Tensor representing each sentence
-                    by using word position in the dictionary.
+    :return stories_v: the new stories structure. Each element of the list is a list containing:
+        0) batch of questions (B, L, 1)
+        1) batch of answers (B)
+        2) batch of facts (B*n_facts, L, 1). Use num_facts to divide this tensor into substories.
+        3) batch of labels (B)
+        4) batch of num_facts (number of facts inside each substory of the batch) (B)
+
     '''
 
     stories_v = []
