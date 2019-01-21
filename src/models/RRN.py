@@ -1,7 +1,7 @@
 import torch
 import torch.nn as nn
 from torch.nn import LSTM
-from src.models import MLP
+from src.models.MLP import MLP
 
 class RRN(nn.Module):
 
@@ -26,16 +26,18 @@ class RRN(nn.Module):
         self.o_dims = o_dims
         self.g_layers = g_layers
 
-        self.edge_attribute_dim = 0 if self.edge_attributes is None else edge_attribute_dim
+        self.edge_attribute_dim = edge_attribute_dim
         self.single_output = single_output
 
         input_f_dim = 2 * self.dim_hidden + self.edge_attribute_dim
         self.f = MLP(input_f_dim, self.f_dims, self.message_dim)
 
-        input_g_dim = self.dim_input + self.message_dim
-        self.g = LSTM(input_g_dim, self.dim_hidden, num_layers=self.g_layers, batch_first=True)
+        input_gmlp_dim = self.dim_input + self.message_dim
+        output_gmlp_dim = 128
+        self.g_mlp = MLP(input_gmlp_dim, self.f_dims, output_gmlp_dim)
+        self.g = LSTM(output_gmlp_dim, self.dim_hidden, num_layers=self.g_layers, batch_first=True)
 
-        input_o_dim = (self.dim_hidden * self.n_units) if self.single_output else self.dim_hidden
+        input_o_dim = self.dim_hidden
         self.o = MLP(input_o_dim, self.o_dims, self.output_dim)
 
     def forward(self, x, hidden, h, edge_attribute=None):
@@ -49,10 +51,10 @@ class RRN(nn.Module):
         '''
 
 
-        messages = torch.zeros(self.n_units, self.n_units, self.message_dim, device=self.device)
+        messages = torch.zeros(self.batch_size, self.batch_size, self.message_dim, device=self.device)
 
-        for i in range(len(self.n_units)):
-            for j in range(len(self.n_units)):
+        for i in range(self.batch_size):
+            for j in range(self.batch_size):
                 if edge_attribute is None:
                     input_f = torch.cat((hidden[i], hidden[j]))
                 else:
@@ -62,9 +64,10 @@ class RRN(nn.Module):
         # sum_messages[i] contains the sum of the messages incoming to node i
         sum_messages = torch.sum(messages, dim=0)
 
-        input_g = torch.cat((x, sum_messages))
+        input_g_mlp = torch.cat((x, sum_messages), dim=1)
 
-        out, h = self.g(input_g, h)
+        input_g = self.g_mlp(input_g_mlp)
+        out, h = self.g(input_g.unsqueeze(1), h)
 
         hidden = out[:,-1,:].squeeze()
 
@@ -78,6 +81,7 @@ class RRN(nn.Module):
 
     def reset_g(self, b):
         # hidden is composed by hidden and cell state vectors
+        self.batch_size = b
         h = (
             torch.zeros(self.g_layers, b, self.dim_hidden, device=self.device, requires_grad=True),
             torch.zeros(self.g_layers, b, self.dim_hidden, device=self.device, requires_grad=True)

@@ -48,20 +48,21 @@ def train_single(train_stories, validation_stories, epochs, mlp, lstm, rrn, crit
             rrn.train()
             lstm.train()
 
-            h = rrn.reset_g(1)
-
             facts_emb, question_emb, h_q, h_f = get_encoding(mlp, lstm, facts, question, device)
             hidden = facts_emb.clone()
 
+            h = rrn.reset_g(facts.size(0))
+
             for reasoning_step in range(3):
+
                 lstm.zero_grad()
                 rrn.zero_grad()
+
 
                 rr, hidden, h = rrn(facts_emb, hidden , h, question_emb)
 
                 loss = criterion(rr.unsqueeze(0), answer)
-
-                loss.backward()
+                loss.backward(retain_graph=True)
                 optimizer.step()
 
 
@@ -75,13 +76,13 @@ def train_single(train_stories, validation_stories, epochs, mlp, lstm, rrn, crit
                 avg_train_losses.append(sum(train_losses)/len(train_losses))
                 avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
 
-                val_loss, val_accuracy = test(validation_stories,lstm,rrn,criterion)
+                val_loss, val_accuracy = test(validation_stories, mlp, lstm,rrn,criterion, device)
                 val_accuracies.append(val_accuracy)
                 val_losses.append(val_loss)
 
                 if not no_save:
                     if val_losses[-1] < best_val:
-                        save_models([(lstm, names_models[0]), (rrn, names_models[2])], saving_path_rrn)
+                        save_models([(lstm, names_models[0]), (rrn, names_models[2]), (mlp, names_models[3])], saving_path_rrn)
                         best_val = val_losses[-1]
 
                 print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
@@ -99,6 +100,7 @@ def test(stories, mlp, lstm, rrn, criterion, device):
     val_loss = 0.
     val_accuracy = 0.
 
+    mlp.eval()
     rrn.eval()
     lstm.eval()
 
@@ -106,7 +108,7 @@ def test(stories, mlp, lstm, rrn, criterion, device):
 
         for question, answer, facts, _ in stories: # for each story
 
-            h = rrn.reset_g(1)
+            h = rrn.reset_g(facts.size(0))
 
             facts_emb, question_emb, h_q, h_f = get_encoding(mlp, lstm, facts, question, device)
             hidden = facts_emb.clone()
@@ -140,7 +142,7 @@ def final_test(stories, mlp, lstm, rrn, criterion, device):
         i = 0
         for question, answer, facts, task in stories: # for each story
 
-            h = rrn.reset_g(1)
+            h = rrn.reset_g(facts.size(0))
 
             facts_emb, question_emb, h_q, h_f = get_encoding(mlp, lstm, facts, question, device)
             hidden = facts_emb.clone()
