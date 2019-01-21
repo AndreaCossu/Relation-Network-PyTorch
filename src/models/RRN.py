@@ -5,7 +5,7 @@ from src.models import MLP
 
 class RRN(nn.Module):
 
-    def __init__(self, adjacency_matrix, dim_input, message_dim, output_dim, f_dims, o_dims, device,  g_layers=1, edge_attribute_dim=0, single_output=False):
+    def __init__(self, adjacency_matrix, dim_hidden, message_dim, output_dim, f_dims, o_dims, device,  g_layers=1, edge_attribute_dim=0, single_output=False):
         '''
         :param adjacency_matrix: (N x N) tensor containing 0 or 1 representing graph adjacency matrix
         :param edge_attribute_dim: 0 if edges have no attributes, else an integer. Default 0.
@@ -16,8 +16,8 @@ class RRN(nn.Module):
 
         self.adjacency_matrix = adjacency_matrix
         self.n_units = self.adjacency_matrix.size(0)
-        self.dim_input = dim_input
-        self.dim_hidden = dim_input
+        self.dim_hidden = dim_hidden
+        self.dim_input = dim_hidden
         self.message_dim = message_dim
         self.output_dim = output_dim
 
