@@ -97,7 +97,7 @@ rrn = RRN(args.max_n_facts, args.hidden_dim_rrn, args.message_dim_rrn, dict_size
 if args.load:
     load_models([(lstm, names_models[0]), (rrn, names_models[2]), (mlp, names_models[3])], saving_path_rrn)
 
-optimizer = torch.optim.Adam(chain(lstm.parameters(), rrn.parameters()), args.learning_rate, weight_decay=args.weight_decay)
+optimizer = torch.optim.Adam(chain(lstm.parameters(), rrn.parameters(), mlp.parameters()), args.learning_rate, weight_decay=args.weight_decay)
 
 criterion = torch.nn.CrossEntropyLoss()
 
