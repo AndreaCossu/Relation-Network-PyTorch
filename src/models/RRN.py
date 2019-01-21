@@ -5,17 +5,16 @@ from src.models import MLP
 
 class RRN(nn.Module):
 
-    def __init__(self, adjacency_matrix, dim_hidden, message_dim, output_dim, f_dims, o_dims, device,  g_layers=1, edge_attribute_dim=0, single_output=False):
+    def __init__(self, n_units, dim_hidden, message_dim, output_dim, f_dims, o_dims, device,  g_layers=1, edge_attribute_dim=0, single_output=False):
         '''
-        :param adjacency_matrix: (N x N) tensor containing 0 or 1 representing graph adjacency matrix
+        :param n_units: number of nodes in the graph
         :param edge_attribute_dim: 0 if edges have no attributes, else an integer. Default 0.
         :param single_output: True if RRN emits only one output at a time, False if it emits as many outputs as units. Default False.
         '''
 
         super(RRN, self).__init__()
 
-        self.adjacency_matrix = adjacency_matrix
-        self.n_units = self.adjacency_matrix.size(0)
+        self.n_units = n_units
         self.dim_hidden = dim_hidden
         self.dim_input = dim_hidden
         self.message_dim = message_dim
@@ -54,12 +53,11 @@ class RRN(nn.Module):
 
         for i in range(len(self.n_units)):
             for j in range(len(self.n_units)):
-                if self.adjacency_matrix[i,j] == 1:
-                    if edge_attribute is None:
-                        input_f = torch.cat((hidden[i], hidden[j]))
-                    else:
-                        input_f = torch.cat((hidden[i], hidden[j], edge_attribute))
-                    messages[i,j] = self.f(input_f)
+                if edge_attribute is None:
+                    input_f = torch.cat((hidden[i], hidden[j]))
+                else:
+                    input_f = torch.cat((hidden[i], hidden[j], edge_attribute))
+                messages[i,j] = self.f(input_f)
 
         # sum_messages[i] contains the sum of the messages incoming to node i
         sum_messages = torch.sum(messages, dim=0)
