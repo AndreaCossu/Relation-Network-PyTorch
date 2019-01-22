@@ -1,7 +1,6 @@
 import torch
 from src.utils import save_models, saving_path_rn, get_answer, names_models
 from sklearn.utils import shuffle
-from collections import defaultdict
 
 def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save):
 
