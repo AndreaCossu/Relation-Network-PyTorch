@@ -7,7 +7,7 @@ import os
 from itertools import chain
 from src.utils import files_names_test_en, files_names_train_en, files_names_test_en_valid, files_names_train_en_valid, files_names_val_en_valid
 from src.utils import saving_path_rn, names_models, load_models, split_train_validation
-from task.babi_task.rn.train import train_single, final_test
+from task.babi_task.rn.train import train_single, test
 
 
 parser = argparse.ArgumentParser()
@@ -100,10 +100,10 @@ if args.epochs > 0:
     print("End training!")
 
 print("Testing...")
-avg_test_loss, avg_test_accuracy = final_test(test_stories, lstm, rn, criterion)
+avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion)
 
-print("Test accuracy: ", dict(avg_test_accuracy))
-print("Test loss: ", dict(avg_test_loss))
+print("Test accuracy: ", avg_test_accuracy)
+print("Test loss: ", avg_test_loss)
 
 if args.epochs > 0:
     import matplotlib
