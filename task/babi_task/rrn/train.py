@@ -50,7 +50,7 @@ def train_single(train_stories, validation_stories, epochs, mlp, lstm, rrn, crit
             facts_emb, question_emb, h_q, h_f = get_encoding(mlp, lstm, facts, question, device)
             hidden = facts_emb.clone()
 
-            h = rrn.reset_g(facts.size(0))
+            h = rrn.reset_g(facts_emb.size(0))
 
             for reasoning_step in range(3):
 
@@ -107,17 +107,17 @@ def test(stories, mlp, lstm, rrn, criterion, device):
 
         for question, answer, facts, _, _ in stories: # for each story
 
-            h = rrn.reset_g(facts.size(0))
-
             facts_emb, question_emb, h_q, h_f = get_encoding(mlp, lstm, facts, question, device)
             hidden = facts_emb.clone()
+
+            h = rrn.reset_g(facts_emb.size(0))
 
             for reasoning_step in range(3):
 
                 rr, hidden, h = rrn(facts_emb, hidden , h, question_emb)
 
                 if reasoning_step==2:
-                    loss = criterion(rr.unsqueeze(0), answer)
+                    loss = criterion(rr, answer)
                     val_loss += loss.item()
                     correct, _ = get_answer(rr, answer)
                     val_accuracy += correct
