@@ -36,7 +36,7 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
             rr = rn(facts_emb, question_emb)
 
             loss = criterion(rr, answer_batch)
-            print(loss)
+
             loss.backward()
             optimizer.step()
 
@@ -91,7 +91,7 @@ def test(stories, lstm, rn, criterion):
 
             rr = rn(facts_emb, question_emb)
 
-            loss = criterion(rr, answer_batch, reduction='mean')
+            loss = criterion(rr, answer_batch)
 
             val_loss += loss.item()
 
@@ -133,7 +133,7 @@ def final_test(stories, lstm, rn, criterion):
 
             rr = rn(facts_emb, question_emb)
 
-            loss = criterion(rr, answer_batch, reduction='mean')
+            loss = criterion(rr, answer_batch)
 
             val_loss[task] += loss.item()
 
