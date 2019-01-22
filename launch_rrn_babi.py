@@ -8,7 +8,7 @@ import os
 from itertools import chain
 from src.utils import files_names_test_en, files_names_train_en, files_names_test_en_valid, files_names_train_en_valid, files_names_val_en_valid
 from src.utils import saving_path_rrn, names_models, load_models, split_train_validation
-from task.babi_task.rrn.train import train_single, final_test
+from task.babi_task.rrn.train import train_single, test
 
 
 parser = argparse.ArgumentParser()
@@ -21,6 +21,7 @@ parser.add_argument('--hidden_dim_rrn', type=int, default=32, help='hidden dimen
 parser.add_argument('--message_dim_rrn', type=int, default=32, help='hidden dimension of RRN messages')
 parser.add_argument('--f_dims', nargs='+', type=int, default=[128, 128, 128], help='hidden layers dimension of message MLP inside RRN')
 parser.add_argument('--o_dims', nargs='+', type=int, default=[128, 128, 128], help='hidden layers dimension of output MLP inside RRN')
+parser.add_argument('--batch_size_stories', type=int, default=10, help='batch size for stories')
 
 parser.add_argument('--max_n_facts', type=int, default=20, help='maximum number of facts to consider in the graph')
 parser.add_argument('--emb_dim', type=int, default=32, help='word embedding dimension')
@@ -71,23 +72,23 @@ print("Reading babi")
 
 if not args.en_valid: # When reading from en-10k and not from en-valid-10k
     stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
-    stories = vectorize_babi(stories, dictionary, device)
     train_stories, validation_stories = split_train_validation(stories, labels)
+    train_stories = vectorize_babi(train_stories, dictionary, args.batch_size_stories, device)
+    validation_stories = vectorize_babi(validation_stories, dictionary, args.batch_size_stories, device)
 else:
     train_stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
-    train_stories = vectorize_babi(train_stories, dictionary, device)
+    train_stories = vectorize_babi(train_stories, dictionary, args.batch_size_stories, device)
     validation_stories, _, _ = read_babi(path_babi_base, to_read_val, args.babi_tasks, only_relevant=args.only_relevant)
-    validation_stories = vectorize_babi(validation_stories, dictionary, device)
+    validation_stories = vectorize_babi(validation_stories, dictionary, args.batch_size_stories, device)
 
 test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks, only_relevant=args.only_relevant)
-test_stories = vectorize_babi(test_stories, dictionary, device)
+test_stories = vectorize_babi(test_stories, dictionary, args.batch_size_stories, device)
 
 dict_size = len(dictionary)
 print("Dictionary size: ", dict_size)
 print("Done reading babi!")
 
-batch_size_lstm = 1 # keep 1. Batch size for questions inside preprocessing LSTM
-lstm = LSTM(args.hidden_dim_lstm, batch_size_lstm, dict_size, args.emb_dim, args.lstm_layers, device).to(device)
+lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_dim, args.lstm_layers, device).to(device)
 
 input_dim_mlp = args.hidden_dim_lstm + args.hidden_dim_lstm + 40
 mlp = MLP(input_dim_mlp, args.hidden_dims_mlp, args.hidden_dim_rrn).to(device)
@@ -99,7 +100,7 @@ if args.load:
 
 optimizer = torch.optim.Adam(chain(lstm.parameters(), rrn.parameters(), mlp.parameters()), args.learning_rate, weight_decay=args.weight_decay)
 
-criterion = torch.nn.CrossEntropyLoss()
+criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 
 if args.epochs > 0:
     print("Start training")
@@ -107,10 +108,10 @@ if args.epochs > 0:
     print("End training!")
 
 print("Testing...")
-avg_test_loss, avg_test_accuracy = final_test(test_stories, mlp, lstm, rrn, criterion, device)
+avg_test_loss, avg_test_accuracy = test(test_stories, mlp, lstm, rrn, criterion, device)
 
-print("Test accuracy: ", dict(avg_test_accuracy))
-print("Test loss: ", dict(avg_test_loss))
+print("Test accuracy: ", avg_test_accuracy)
+print("Test loss: ", avg_test_loss)
 
 if args.epochs > 0:
     import matplotlib

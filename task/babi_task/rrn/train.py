@@ -1,30 +1,29 @@
 import torch
 from src.utils import save_models, saving_path_rrn, get_answer, names_models
 from sklearn.utils import shuffle
-from collections import defaultdict
 import random
 
 def get_encoding(mlp, lstm, facts, question, device):
 
-    h_q, h_f = lstm.reset_hidden_state(facts.size(0))
+    h_q, h_f = lstm.reset_hidden_state(facts.size(0)*facts.size(1))
 
     question_emb, h_q = lstm.process_query(question, h_q)
-    question_emb = question_emb.squeeze()[-1,:]
+    question_emb = question_emb.squeeze()[:,-1]
 
     facts_emb, h_f = lstm.process_facts(facts, h_f)
-    facts_emb = facts_emb[:,-1,:]
+    facts_emb = facts_emb[:,:,-1,:]
 
     offset = random.randint(1,20)
-    indexes = range(len(facts))
 
-    onehot = torch.zeros(len(facts), 40, device=device)
-    k=0
-    for i in indexes:
-        onehot[k, i+offset] = 1.
-        k += 1
+    onehot = torch.zeros(facts.size(0), facts.size(1), 40, device=device)
 
-    input_mlp = torch.cat( (facts_emb, question_emb.repeat(len(facts), 1)), dim=1)
-    input_mlp = torch.cat((input_mlp, onehot), dim=1)
+    for i in range(facts.size(1)):
+        onehot[:, i, i+offset] = 1.
+
+    q = question_emb.unsqueeze(1)
+    q = q.repeat(1,facts_emb.size(1),1)
+    input_mlp = torch.cat( (facts_emb, q, onehot), dim=2)
+
     facts_encoded = mlp(input_mlp)
 
     return facts_encoded, question_emb, h_q, h_f
@@ -43,7 +42,7 @@ def train_single(train_stories, validation_stories, epochs, mlp, lstm, rrn, crit
     for i in range(epochs):
 
         for s in range(len(train_stories)):
-            question, answer, facts, _ = train_stories[s]
+            question, answer, facts, _, _ = train_stories[s]
 
             rrn.train()
             lstm.train()
@@ -61,7 +60,7 @@ def train_single(train_stories, validation_stories, epochs, mlp, lstm, rrn, crit
 
                 rr, hidden, h = rrn(facts_emb, hidden , h, question_emb)
 
-                loss = criterion(rr.unsqueeze(0), answer)
+                loss = criterion(rr, answer)
                 loss.backward(retain_graph=True)
                 optimizer.step()
 
@@ -106,7 +105,7 @@ def test(stories, mlp, lstm, rrn, criterion, device):
 
     with torch.no_grad():
 
-        for question, answer, facts, _ in stories: # for each story
+        for question, answer, facts, _, _ in stories: # for each story
 
             h = rrn.reset_g(facts.size(0))
 
@@ -125,48 +124,5 @@ def test(stories, mlp, lstm, rrn, criterion, device):
 
         val_accuracy /= float(len(stories))
         val_loss /= float(len(stories))
-
-        return val_loss, val_accuracy
-
-def final_test(stories, mlp, lstm, rrn, criterion, device):
-
-    val_loss = defaultdict(float)
-    val_accuracy = defaultdict(float)
-
-    rrn.eval()
-    lstm.eval()
-
-    with torch.no_grad():
-
-        curr_task = stories[0][3]
-        i = 0
-        for question, answer, facts, task in stories: # for each story
-
-            h = rrn.reset_g(facts.size(0))
-
-            facts_emb, question_emb, h_q, h_f = get_encoding(mlp, lstm, facts, question, device)
-            hidden = facts_emb.clone()
-
-            for reasoning_step in range(3):
-
-                rr, hidden, h = rrn(facts_emb, hidden , h, question_emb)
-
-                if reasoning_step==2:
-                    loss = criterion(rr.unsqueeze(0), answer)
-                    val_loss[task] += loss.item()
-                    correct, _ = get_answer(rr, answer)
-                    val_accuracy[task] += correct
-
-            if curr_task != task:
-                val_accuracy[curr_task] /= float(i)
-                val_loss[curr_task] /= float(i)
-                curr_task = task
-                i=0
-
-
-            i += 1
-
-        val_accuracy[curr_task] /= float(i)
-        val_loss[curr_task] /= float(i)
 
         return val_loss, val_accuracy
