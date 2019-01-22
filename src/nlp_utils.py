@@ -1,6 +1,6 @@
 import torch
 from nltk import word_tokenize
-
+from torch.nn.utils.rnn import pad_sequence
 
 def vectorize_babi(stories, dictionary, batch_size, device):
     '''
@@ -8,9 +8,9 @@ def vectorize_babi(stories, dictionary, batch_size, device):
     :param dictionary: list of words produced by read_babi function
 
     :return stories_v: the new stories structure. Each element of the list is a list containing:
-        0) batch of questions (B, L, 1)
+        0) batch of questions (B, L)
         1) batch of answers (B)
-        2) batch of facts (B*n_facts, L, 1). Use num_facts to divide this tensor into substories.
+        2) batch of facts (B, max_n_facts, max_L).
         3) batch of labels (B)
         4) batch of num_facts (number of facts inside each substory of the batch) (B)
 
@@ -21,10 +21,9 @@ def vectorize_babi(stories, dictionary, batch_size, device):
     questions_v = []
     answers_v = torch.empty(batch_size, device=device).long()
     labels_v = torch.empty(batch_size, device=device).long()
-    num_facts = torch.empty(batch_size, device=device).long()
+    num_facts = []
 
     facts_v = []
-
     for i in range(len(stories)):
         q, a, facts, label = stories[i]
 
@@ -34,22 +33,30 @@ def vectorize_babi(stories, dictionary, batch_size, device):
         answers_v[i % batch_size] = dictionary.index(a)
 
         labels_v[i % batch_size] = label
-        num_facts[i % batch_size] = len(facts)
+        num_facts.append(len(facts))
+        single_facts = [ torch.tensor([dictionary.index(el) for el in fact], device=device).long() for fact in facts ]
+        facts_v += single_facts
 
-        for fact in facts:
-            facts_v.append( torch.tensor([dictionary.index(el) for el in fact], device=device).long() )
 
         if ((i+1) % batch_size) == 0:
             stories_v.append([])
-            stories_v[-1].append(torch.nn.utils.rnn.pad_sequence(questions_v, batch_first=True))
+            stories_v[-1].append(pad_sequence(questions_v, batch_first=True))
             stories_v[-1].append(answers_v)
-            stories_v[-1].append(torch.nn.utils.rnn.pad_sequence(facts_v, batch_first=True))
+            facts_v = pad_sequence(facts_v, batch_first=True)
+
+            ff = []
+            base = 0
+            for el in num_facts:
+                ff.append(facts_v[base:base+el])
+                base += el
+
+            stories_v[-1].append(pad_sequence(ff, batch_first=True))
             stories_v[-1].append(labels_v)
             stories_v[-1].append(num_facts)
 
             answers_v = torch.empty(batch_size, device=device).long()
             labels_v = torch.empty(batch_size, device=device).long()
-            num_facts = torch.empty(batch_size, device=device).long()
+            num_facts = []
             facts_v = []
             questions_v = []
 

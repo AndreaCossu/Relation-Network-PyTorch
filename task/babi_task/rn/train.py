@@ -17,7 +17,7 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
     for i in range(epochs):
 
         for s in range(len(train_stories)):
-            question, answer, facts, _ = train_stories[s]
+            question_batch, answer_batch, facts_batch, _, _ = train_stories[s]
 
             rn.train()
             lstm.train()
@@ -25,23 +25,23 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
             lstm.zero_grad()
             rn.zero_grad()
 
-            h_q, h_f = lstm.reset_hidden_state(facts.size(0))
+            h_q, h_f = lstm.reset_hidden_state(facts_batch.size(0)*facts_batch.size(1))
 
-            question_emb, h_q = lstm.process_query(question, h_q)
-            question_emb = question_emb.squeeze()[-1]
+            question_emb, h_q = lstm.process_query(question_batch, h_q)
+            question_emb = question_emb[:,-1]
 
-            facts_emb, h_f = lstm.process_facts(facts, h_f)
-            facts_emb = facts_emb[:,-1,:]
+            facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
+            facts_emb = facts_emb[:,:,-1,:]
 
             rr = rn(facts_emb, question_emb)
 
-            loss = criterion(rr.unsqueeze(0), answer)
-
+            loss = criterion(rr, answer_batch)
+            print(loss)
             loss.backward()
             optimizer.step()
 
             with torch.no_grad():
-                correct, _ = get_answer(rr, answer)
+                correct, _ = get_answer(rr, answer_batch)
                 train_accuracies.append(correct)
 
             train_losses.append(loss.item())
@@ -79,23 +79,23 @@ def test(stories, lstm, rn, criterion):
     lstm.eval()
 
     with torch.no_grad():
-        for question, answer, facts, _ in stories: # for each story
+        for question_batch, answer_batch, facts_batch, _, _ in stories: # for each story
 
-            h_q, h_f = lstm.reset_hidden_state(facts.size(0))
+            h_q, h_f = lstm.reset_hidden_state(facts_batch.size(0)*facts_batch.size(1))
 
-            question_emb, h_q = lstm.process_query(question, h_q)
-            question_emb = question_emb.squeeze()[-1]
+            question_emb, h_q = lstm.process_query(question_batch, h_q)
+            question_emb = question_emb[:,-1]
 
-            facts_emb, h_f = lstm.process_facts(facts, h_f)
-            facts_emb = facts_emb[:,-1,:]
+            facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
+            facts_emb = facts_emb[:,:,-1,:]
 
             rr = rn(facts_emb, question_emb)
 
-            loss = criterion(rr.unsqueeze(0), answer)
+            loss = criterion(rr, answer_batch, reduction='mean')
 
             val_loss += loss.item()
 
-            correct, _ = get_answer(rr, answer)
+            correct, _ = get_answer(rr, answer_batch)
             val_accuracy += correct
 
         val_accuracy /= float(len(stories))
@@ -115,7 +115,7 @@ def final_test(stories, lstm, rn, criterion):
 
         curr_task = stories[0][3]
         i = 0
-        for question, answer, facts, task in stories: # for each story
+        for question_batch, answer_batch, facts_batch, task, _ in stories: # for each story
 
             if curr_task != task:
                 val_accuracy[curr_task] /= float(i)
@@ -123,21 +123,21 @@ def final_test(stories, lstm, rn, criterion):
                 curr_task = task
                 i=0
 
-            h_q, h_f = lstm.reset_hidden_state(facts.size(0))
+            h_q, h_f = lstm.reset_hidden_state(facts_batch.size(0)*facts_batch.size(1))
 
-            question_emb, h_q = lstm.process_query(question, h_q)
-            question_emb = question_emb.squeeze()[-1]
+            question_emb, h_q = lstm.process_query(question_batch, h_q)
+            question_emb = question_emb[:,-1]
 
-            facts_emb, h_f = lstm.process_facts(facts, h_f)
-            facts_emb = facts_emb[:,-1,:]
+            facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
+            facts_emb = facts_emb[:,:,-1,:]
 
             rr = rn(facts_emb, question_emb)
 
-            loss = criterion(rr.unsqueeze(0), answer)
+            loss = criterion(rr, answer_batch, reduction='mean')
 
             val_loss[task] += loss.item()
 
-            correct, _ = get_answer(rr, answer)
+            correct, _ = get_answer(rr, answer_batch)
             val_accuracy[task] += correct
 
             i += 1
