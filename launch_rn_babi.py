@@ -24,7 +24,7 @@ parser.add_argument('--batch_size_stories', type=int, default=10, help='stories 
 
 
 # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-parser.add_argument('--babi_tasks', nargs='+', type=int, default=[1], help='which babi task to train and test')
+parser.add_argument('--babi_tasks', nargs='+', type=int, default=[1], help='which babi task to train and test. -1 to select all of them.')
 parser.add_argument('--en_valid', action="store_true", help='Use en-valid-10k instead of en-10k folder of babi')
 
 # optimizer parameters
@@ -50,6 +50,9 @@ else:
 device = torch.device(mode)
 
 cd = os.path.dirname(os.path.abspath(__file__))
+
+if args.babi_tasks == [-1]:
+    args.babi_tasks = list(range(1,21))
 
 if args.en_valid:
     path_babi_base = cd + "/babi/en-valid-10k/"
