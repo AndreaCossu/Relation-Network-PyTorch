@@ -8,7 +8,7 @@ def get_encoding(mlp, lstm, facts, question, device):
     h_q, h_f = lstm.reset_hidden_state(facts.size(0)*facts.size(1))
 
     question_emb, h_q = lstm.process_query(question, h_q)
-    question_emb = question_emb.squeeze()[:,-1]
+    question_emb = question_emb[:,-1]
 
     facts_emb, h_f = lstm.process_facts(facts, h_f)
     facts_emb = facts_emb[:,:,-1,:]
