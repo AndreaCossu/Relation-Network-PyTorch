@@ -45,34 +45,41 @@ class RRN(nn.Module):
         This can be called repeatedly after hidden states are set.
 
         :param x: inputs to the RRN nodes
-        :param hidden: hidden states of RRN nodes
+        :param hidden: hidden states of RRN nodes (B, N_facts, H)
         :param h: hidden and cell states of g
-        :param edge_attributes: (edge_attribute_dim) tensor containing edge attribute or None if edges have no attributes. Default None.
+        :param edge_attributes: (B, Q_dim) tensor containing edge attribute or None if edges have no attributes. Default None.
         '''
 
+        n_facts = hidden.size(1)
 
-        messages = torch.zeros(self.batch_size, self.batch_size, self.message_dim, device=self.device)
+        hi = hidden.repeat(1, n_facts, 1)
+        hj = hidden.unsqueeze(2)
+        hj = hj.repeat(1,1,n_facts,1).view(hidden.size(0),-1,hidden.size(2))
+        if edge_attribute is not None:
+            ea = edge_attribute.unsqueeze(1)
+            ea = ea.repeat(1,hi.size(1),1)
+            input_f = torch.cat((hj,hi,ea), dim=2)
+        else:
+            input_f = torch.cat((hi,hj), dim=2)
 
-        for i in range(self.batch_size):
-            for j in range(self.batch_size):
-                if edge_attribute is None:
-                    input_f = torch.cat((hidden[i], hidden[j]))
-                else:
-                    input_f = torch.cat((hidden[i], hidden[j], edge_attribute))
-                messages[i,j] = self.f(input_f)
+
+        messages = self.f(input_f)
+
+        messages = messages.view(hidden.size(0),hidden.size(1),hidden.size(1), self.message_dim)
 
         # sum_messages[i] contains the sum of the messages incoming to node i
-        sum_messages = torch.sum(messages, dim=0)
+        sum_messages = torch.sum(messages, dim=2) # B, N_facts, Message_dim
 
-        input_g_mlp = torch.cat((x, sum_messages), dim=1)
+        input_g_mlp = torch.cat((x, sum_messages), dim=2)
 
         input_g = self.g_mlp(input_g_mlp)
-        out, h = self.g(input_g.unsqueeze(1), h)
 
-        hidden = out[:,-1,:].squeeze()
+        out, h = self.g(input_g, h)
+
+        hidden = out.clone()
 
         if self.single_output:
-            sum_hidden = torch.sum(hidden, dim=0)
+            sum_hidden = torch.sum(hidden, dim=1)
             out = self.o(sum_hidden)
         else:
             out = self.o(hidden)
