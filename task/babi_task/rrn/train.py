@@ -13,12 +13,12 @@ def get_encoding(mlp, lstm, facts, question, device):
     facts_emb, h_f = lstm.process_facts(facts, h_f)
     facts_emb = facts_emb[:,:,-1,:]
 
-    offset = random.randint(1,20)
-
+    offset = random.randint(1,40-facts.size(1)-1)
     onehot = torch.zeros(facts.size(0), facts.size(1), 40, device=device)
+    spreads = [ [[i+offset] for i in range(facts.size(1))] for j in range(facts.size(0)) ]
+    spreads_v= torch.tensor( spreads ,device=device)
+    onehot.scatter_(2, spreads_v ,1.)
 
-    for i in range(facts.size(1)):
-        onehot[:, i, i+offset] = 1.
 
     q = question_emb.unsqueeze(1)
     q = q.repeat(1,facts_emb.size(1),1)
