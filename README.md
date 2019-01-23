@@ -21,12 +21,15 @@ This implementation tests the Relation Network model (RN) and the Recurrent Rela
 * The main script is `launch_rn_babi.py`.
   * Run it with `python launch_rn_babi.py [options]`.
   * Options are listed and explained with `python launch_rn_babi.py --help`.
-  * In particular you can select which babi tasks to train and test. You can only choose to read all the facts or just the relevant ones.
+  * In particular you can select which babi tasks to train and test. You can choose to read all the facts or just the relevant ones.
 
 # Train and test RRN
 * Model implementation is inside `src/models/RRN.py`
-
-***I am working on this part right now.***
+* Train and test functions are inside `task/babi_task/rrn/train.py`
+* The main script is `launch_rrn_babi.py`.
+  * Run it with `python launch_rrn_babi.py [options]`.
+  * Options are listed and explained with `python launch_rrn_babi.py --help`.
+  * In particular you can select which babi tasks to train and test. You can choose to read all the facts or just the relevant ones.
 
 # Requirements
 Run `pip install -r requirements.txt`
