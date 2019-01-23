@@ -35,7 +35,7 @@ class MLP(nn.Module):
         x = self.linears[0](x)
         x = self.activation(x)
 
-        for i in range(len(1, self.hidden_dims)):
+        for i in range(1,len(self.hidden_dims)):
             x = self.linears[i](x)
             x = self.activation(x)
             if self.droput:
