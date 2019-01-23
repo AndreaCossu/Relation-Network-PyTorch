@@ -23,7 +23,6 @@ parser.add_argument('--f_dims', nargs='+', type=int, default=[128, 128, 128], he
 parser.add_argument('--o_dims', nargs='+', type=int, default=[128, 128, 128], help='hidden layers dimension of output MLP inside RRN')
 parser.add_argument('--batch_size_stories', type=int, default=10, help='batch size for stories')
 
-parser.add_argument('--max_n_facts', type=int, default=20, help='maximum number of facts to consider in the graph')
 parser.add_argument('--emb_dim', type=int, default=32, help='word embedding dimension')
 parser.add_argument('--only_relevant', action="store_true", help='read only relevant fact from babi dataset')
 
@@ -33,7 +32,7 @@ parser.add_argument('--babi_tasks', nargs='+', type=int, default=[1], help='whic
 parser.add_argument('--en_valid', action="store_true", help='Use en-valid-10k instead of en-10k folder of babi')
 
 # optimizer parameters
-parser.add_argument('--weight_decay', type=float, default=0, help='optimizer hyperparameter')
+parser.add_argument('--weight_decay', type=float, default=1e-5, help='optimizer hyperparameter')
 parser.add_argument('--learning_rate', type=float, default=2e-4, help='optimizer hyperparameter')
 
 parser.add_argument('--cuda', action="store_true", help='use gpu')
@@ -93,7 +92,7 @@ lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_d
 input_dim_mlp = args.hidden_dim_lstm + args.hidden_dim_lstm + 40
 mlp = MLP(input_dim_mlp, args.hidden_dims_mlp, args.hidden_dim_rrn).to(device)
 
-rrn = RRN(args.max_n_facts, args.hidden_dim_rrn, args.message_dim_rrn, dict_size, args.f_dims, args.o_dims, device, g_layers=1, edge_attribute_dim=args.hidden_dim_lstm, single_output=True).to(device)
+rrn = RRN(args.hidden_dim_rrn, args.message_dim_rrn, dict_size, args.f_dims, args.o_dims, device, g_layers=1, edge_attribute_dim=args.hidden_dim_lstm, single_output=True).to(device)
 
 if args.load:
     load_models([(lstm, names_models[0]), (rrn, names_models[2]), (mlp, names_models[3])], saving_path_rrn)
