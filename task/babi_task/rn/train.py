@@ -1,6 +1,7 @@
 import torch
 from src.utils import save_models, saving_path_rn, get_answer, names_models
-from sklearn.utils import shuffle
+from src.utils import  random_idx_gen
+import random
 
 def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save):
 
@@ -13,9 +14,14 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
     val_losses = [1000.]
     best_val = val_losses[0]
 
+    gen_idx = random_idx_gen(0, len(train_stories))
+
     for i in range(epochs):
 
-        for s in range(len(train_stories)):
+            s = next(gen_idx)
+
+            s = random.randint(0, len(train_stories)-1)
+
             question_batch, answer_batch, facts_batch, _, _ = train_stories[s]
 
             rn.train()
@@ -45,8 +51,8 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
 
             train_losses.append(loss.item())
 
-            if ( ((s+1) %  print_every) == 0):
-                print("Epoch ", i+1, ": ", s+1, " / ", len(train_stories))
+            if ( ((i+1) %  print_every) == 0):
+                print("Epoch ", i+1, "/ ", epochs)
                 avg_train_losses.append(sum(train_losses)/len(train_losses))
                 avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
 
@@ -64,8 +70,6 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
                 print()
                 train_losses =  []
                 train_accuracies = []
-
-        train_stories = shuffle(train_stories)
 
     return avg_train_losses, avg_train_accuracies, val_losses[1:], val_accuracies
 

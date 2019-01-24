@@ -1,5 +1,6 @@
 import torch
 from sklearn.model_selection import train_test_split
+import random
 
 def get_answer(output, target, vocabulary=None):
     '''
@@ -35,6 +36,16 @@ def split_train_validation(stories, labels, perc_validation=0.2, shuffle=True):
     train_stories, validation_stories = train_test_split(stories, test_size=perc_validation, shuffle=shuffle, stratify=labels)
 
     return train_stories, validation_stories
+
+
+def random_idx_gen(start,end):
+    indices = list(range(start,end))
+
+    while True:
+        random.shuffle(indices)
+        for el in indices:
+            yield el
+
 
 
 def save_models(models, path):
