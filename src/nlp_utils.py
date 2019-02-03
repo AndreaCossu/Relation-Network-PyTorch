@@ -120,6 +120,8 @@ def read_babi(path_babi, to_read, babi_tasks, only_relevant=False):
                         facts_substory = list([facts[idx] for idx in support])
                     else:
                         facts_substory = list(facts.values())
+                        if len(facts_substory) > 20:
+                            facts_substory = facts_substory[-20:]
 
                     labels.append(label)
                     stories.append([question_tokens, answer, facts_substory, label])
