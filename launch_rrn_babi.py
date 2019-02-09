@@ -8,6 +8,7 @@ import os
 from itertools import chain
 from src.utils import files_names_test_en, files_names_train_en, files_names_test_en_valid, files_names_train_en_valid, files_names_val_en_valid
 from src.utils import saving_path_rrn, names_models, load_models, split_train_validation
+from src.utils import load_dict, save_dict
 from task.babi_task.rrn.train import train_single, test
 
 
@@ -86,6 +87,11 @@ else:
 test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks, only_relevant=args.only_relevant)
 test_stories = vectorize_babi(test_stories, dictionary, args.batch_size_stories, device)
 
+if not args.load:
+    save_dict(dictionary)
+else:
+    dictionary = load_dict()
+    
 dict_size = len(dictionary)
 print("Dictionary size: ", dict_size)
 print("Done reading babi!")

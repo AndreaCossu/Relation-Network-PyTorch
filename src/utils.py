@@ -1,6 +1,18 @@
 import torch
 from sklearn.model_selection import train_test_split
 import random
+import pickle
+
+
+def save_dict(dictionary):
+    with open(saving_path_dict, 'wb') as f:
+        pickle.dump(dictionary, f)
+
+def load_dict():
+    with open(saving_path_dict, 'rb') as f:
+        dictionary = pickle.load(f)
+
+    return dictionary
 
 def get_answer(output, target, vocabulary=None):
     '''
@@ -70,7 +82,7 @@ def load_models(models, path):
         model.load_state_dict(checkpoint[name])
 
 
-
+saving_path_dict = 'saved_models/dict.data'
 saving_path_rn = 'saved_models/rn.tar'
 saving_path_rrn = 'saved_models/rrn.tar'
 names_models = ['LSTM', 'RN', 'RRN', 'MLP']
