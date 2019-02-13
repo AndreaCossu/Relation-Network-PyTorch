@@ -13,7 +13,7 @@ from task.babi_task.rrn.train import train_single, test
 
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--epochs', type=int, default=1, help='epochs to train. Each epoch process all the dataset in input.')
+parser.add_argument('--epochs', type=int, default=1, help='epochs to train.')
 parser.add_argument('--g_layers', type=int, default=1, help='layers of LSTM of g inside RRN')
 parser.add_argument('--lstm_layers', type=int, default=1, help='layers of preprocessing LSTM')
 parser.add_argument('--hidden_dim_lstm', type=int, default=32, help='hidden dimension of preprocessing LSTM')
@@ -91,7 +91,7 @@ if not args.load:
     save_dict(dictionary)
 else:
     dictionary = load_dict()
-    
+
 dict_size = len(dictionary)
 print("Dictionary size: ", dict_size)
 print("Done reading babi!")

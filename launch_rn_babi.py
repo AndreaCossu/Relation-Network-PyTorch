@@ -11,7 +11,7 @@ from src.utils import load_dict, save_dict
 from task.babi_task.rn.train import train_single, test
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--epochs', type=int, default=1, help='epochs to train. Each epoch process all the dataset in input.')
+parser.add_argument('--epochs', type=int, default=1, help='epochs to train.')
 parser.add_argument('--hidden_dims_g', nargs='+', type=int, default=[256, 256, 256], help='layers of relation function g')
 parser.add_argument('--output_dim_g', type=int, default=256, help='output dimension of relation function g')
 parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512], help='layers of final network f')
