@@ -32,7 +32,7 @@ parser.add_argument('--weight_decay', type=float, default=0, help='optimizer hyp
 parser.add_argument('--learning_rate', type=float, default=2e-4, help='optimizer hyperparameter')
 
 parser.add_argument('--cuda', action="store_true", help='use gpu')
-parser.add_argument('--load', action="store_true", help=' load saved model (files must be named rn.pt and lstm.pt inside models/)')
+parser.add_argument('--load', action="store_true", help=' load saved model')
 parser.add_argument('--no_save', action="store_true", help='disable model saving')
 parser.add_argument('--print_every', type=int, default=500, help='print information every print_every steps')
 args = parser.parse_args()
