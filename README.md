@@ -19,7 +19,7 @@ This implementation tests the Relation Network model (RN) and the Recurrent Rela
 * Create a folder `plots` to store saved plots
 
 ## nltk configurations
-* Run following command in terminal: `"/Applications/Python 3.7/Install Certificates.command"`
+* Run following command in terminal: `"/Applications/Python 3.7/Install Certificates.command"`  
 (gives authorization for nltk)
 * Run following command in python:
 ```python
