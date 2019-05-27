@@ -1,4 +1,7 @@
 # Relation-Network-PyTorch
+
+Original Repository: https://github.com/AndreaCossu/Relation-Network-PyTorch
+
 Implementation of Relation Network. Original paper: https://arxiv.org/abs/1706.01427
 
 Implementation of Recurrent Relational Network. Original paper: https://arxiv.org/abs/1711.08028
@@ -14,6 +17,16 @@ This implementation tests the Relation Network model (RN) and the Recurrent Rela
 * Download the babi dataset (20 tasks) and place it under `babi/` folder in the project root
 * Create a folder `saved_models` to store saved models
 * Create a folder `plots` to store saved plots
+
+## nltk configurations
+* Run following command in terminal: "/Applications/Python 3.7/Install Certificates.command"
+(gives authorization for nltk)
+* Run following command in python:
+```python
+import nltk
+nltk.download('punkt')
+```
+
 
 # Train and test RN
 * Model implementation is inside `src/models/RN.py`
