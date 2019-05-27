@@ -1,2 +1,4 @@
 torch
 scikit-learn
+nltk
+matplotlib
