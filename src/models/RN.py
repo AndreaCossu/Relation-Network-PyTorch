@@ -7,12 +7,16 @@ class RelationNetwork(nn.Module):
     def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, batch_size, device):
         '''
         :param object_dim: Equal to LSTM hidden dim. Dimension of the single object to be taken into consideration from g.
-        '''
+        ''' 
+        # f y g se refieren a las funciones del paper
+        # TODO: object_dim debería ser 2048, porque debería recibir las features de los objetos de Faster 
+        # TODO: output_dim_f debería ser la cantidad de respuestas posibles
+        # TODO: query es la pregunta 
 
         super(RelationNetwork, self).__init__()
 
         self.object_dim = object_dim
-        self.query_dim = self.object_dim
+        self.query_dim = self.object_dim # TODO: Solo válido para bAbI (?)
         self.input_dim_g = 2 * self.object_dim + self.query_dim # g analyzes pairs of objects
         self.hidden_dims_g = hidden_dims_g
         self.output_dim_g = output_dim_g
@@ -29,8 +33,16 @@ class RelationNetwork(nn.Module):
     def forward(self, x, q=None):
         '''
         :param x: (batch, n_facts, length_fact)
+        #TODO: x: la imagen (batch, 2048)
         :param q: (batch, length_q) query, optional.
         '''
+
+        # dummy: [[f1, f2, f3],
+        #         [f1, f2, f3],
+        #         [f1, f2, f3],
+        #         [f1, f2, f3]]
+        # batch: 4, facts: 3, length: 2
+
 
         n_facts = x.size(1)
 
