@@ -1,45 +1,51 @@
-#%%
 import torch
-f1 = [11, 12, 13, 14]
-f2 = [21, 22, 23, 24]
-f3 = [31, 32, 33, 34]
-f4 = [41, 42, 43, 44]
-f5 = [51, 52, 53, 54]
-f6 = [61, 62, 63, 64]
+"""
+def test():
+    yield 1,2,3
 
-batch_1 = [f1, f2, f3]
-batch_2 = [f4, f5, f6]
-x = [
-        batch_1,
-        batch_2,
-    ]
+batch = test()
+val_1, val_2, val_3 = next(batch)
+
+print(val_1, val_2, val_3)
+
+print(["hola" if i < 5 else "chao" for i in range(10)])
+"""
+
+question_v = []
+
+# <PADDING> Index: len(dictionary_question)
+padding_symbol_Index = 1
+MAX_QUESTION_LENGTH = 4
+
+questions = ["como estas?", "que día es?", "cuál lapiz es tuyo?"]
+
+for question in questions:
+
+    # words = question.split(" ")
+    # q_v = torch.rand(1, MAX_QUESTION_LENGTH)
+    # lst = [0 if i < len(words) else padding_symbol_Index for i in range(MAX_QUESTION_LENGTH)]
+    # torch.cat([lst], out=q_v)
+    # question_v.append(q_v)
     
-x = torch.Tensor(x)
+    words = question.split(" ")
+    
+    q_v = [0 if i < len(words) else padding_symbol_Index for i in range(MAX_QUESTION_LENGTH)]
+    # q_v = [dictionary_question.index(words[i]) for i in range(MAX_QUESTION_LENGTH) if i < len(words) else paddingIndex]
+    question_v.append(q_v)
 
-print(x.size())
+print(question_v)
 
-def forward(x, q=None):
-        '''
-        :param x: (batch, n_facts, length_fact)
-        #TODO: x: la imagen (batch, 2048)
-        :param q: (batch, length_q) query, optional.
-        '''
+b = torch.FloatTensor(question_v)
 
-        # dummy: [[f1, f2, f3],
-        #         [f1, f2, f3],
-        #         [f1, f2, f3],
-        #         [f1, f2, f3]]
-        # batch: 4, facts: 3, length: 2
+"""
+a = []
+for i in range(100000):
+    a.append(torch.rand(1, 100, 100)
 
-        n_facts = x.size(1)
+b = torch.Tensor(100000, 100, 100)
+torch.cat(a, out=b)
+"""
 
-        xi = x.repeat(1, n_facts, 1)
-        print("xi:")
-        print(xi)
-        xj = x.unsqueeze(2)
-        print("xj:")
-        print(xj)
-        xj = xj.repeat(1, 1, n_facts, 1).view(x.size(0), -1, x.size(2))
-        print("xj:")
-        print(xj)
-forward(x)
+
+print(b)
+print(b.shape)

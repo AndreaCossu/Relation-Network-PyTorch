@@ -1,1 +1,5 @@
 h5py
+silx
+pandas
+numpy
+tqdm

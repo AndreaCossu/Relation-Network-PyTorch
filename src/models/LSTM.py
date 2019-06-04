@@ -11,13 +11,17 @@ class LSTM(nn.Module):
         self.device = device
         self.hidden_dim = hidden_dim
         self.layers = layers
-
+        
+        #PADDING
+        number_of_extra_simbols = 1 #1 por padding
+        vocabulary_size = vocabulary_size + number_of_extra_simbols 
+        
         self.embeddings = nn.Embedding(vocabulary_size, dim_embedding).to(self.device)
 
         self.lstm_q = nn.LSTM(dim_embedding, hidden_dim, num_layers=self.layers, batch_first = True)
         self.lstm_f = nn.LSTM(dim_embedding, hidden_dim, num_layers=self.layers, batch_first = True)
 
-    def process_query(self, x, h):
+    def process_question(self, x, h):
 
         emb = self.embeddings(x) # B, L, D
 
@@ -33,15 +37,10 @@ class LSTM(nn.Module):
 
         return processed.view(x.size(0), x.size(1), x.size(2), -1), h
 
-    def reset_hidden_state(self, b):
+    def reset_hidden_state(self):
         # hidden is composed by hidden and cell state vectors
         h_q = (
             torch.zeros(self.layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True),
             torch.zeros(self.layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True)
             )
-
-        h_f = (
-            torch.zeros(self.layers, b, self.hidden_dim, device=self.device, requires_grad=True),
-            torch.zeros(self.layers, b, self.hidden_dim, device=self.device, requires_grad=True)
-            )
-        return h_q, h_f
+        return h_q

@@ -1,6 +1,63 @@
 import torch
 from nltk import word_tokenize
-from torch.nn.utils.rnn import pad_sequence
+from torch.nn.utils.rnn import pad_sequence, pack_sequence
+from nltk.tokenize import RegexpTokenizer
+import numpy as np
+
+
+def vectorize_gqa(batch_question, batch_answer, dictionary_question , dictionary_answer, batch_size, device, MAX_QUESTION_LENGTH):
+    """
+    batch de 2 en este ejemplo:
+    * question_batch = ["cual es el clima", "como estas"] -> [[5,17,34,54] [23,54]]
+    * answer_ground_truth_batch = ["soleado", "super bien"] -> [[53], [32]]
+    """
+    question_v = []
+    answers_v = torch.empty(batch_size, device=device).long()
+    
+    
+    """
+    a = []
+    for i in range(100000):
+        a.append(torch.rand(1, 100, 100)
+
+    b = torch.Tensor(100000, 100, 100)
+    torch.cat(a, out=b)
+    """
+    
+    # <PADDING> Index: len(dictionary_question)
+    padding_symbol_Index = len(dictionary_question)
+    
+    tokenizer = RegexpTokenizer(r'\w+')
+
+    for question in batch_question:
+        """
+        from nltk.tokenize import RegexpTokenizer
+
+        tokenizer = RegexpTokenizer(r'\w+')
+        tokenizer.tokenize('Eighty-seven miles to go, yet.  Onward!')
+        
+        Output:
+        ['Eighty', 'seven', 'miles', 'to', 'go', 'yet', 'Onward']
+        """
+        
+        words = tokenizer.tokenize(question)
+        q_v = [dictionary_question.index(words[i]) if i < len(words) else padding_symbol_Index for i in range(MAX_QUESTION_LENGTH)]
+        # q_v = [dictionary_question.index(words[i]) for i in range(MAX_QUESTION_LENGTH) if i < len(words) else paddingIndex]
+        question_v.append(q_v)
+        
+    
+    question_tensor = torch.FloatTensor(question_v, device=device).long()
+    
+    for i, answer in enumerate(batch_answer):        
+        answers_v[i] = dictionary_answer.index(answer)
+    
+    return question_tensor, answers_v
+ 
+
+# def convert2tensor(x):
+#     numpy_array = np.array(x)
+#     x = torch.FloatTensor(x)
+#     return x
 
 def vectorize_babi(stories, dictionary, batch_size, device):
     '''

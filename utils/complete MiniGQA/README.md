@@ -18,3 +18,4 @@ Para generar `miniGQA_objectFeatures.hdf5` se requiere:
 
 - Object features de todo GQA. Ubicar los archivos `gqa_objects_X.h5` y `gqa_objects_info.json` en `./image_features `.
 - Imágenes miniGQA. Ubicar en la carpeta `./images`.
+

@@ -2,3 +2,7 @@ torch
 scikit-learn
 nltk
 matplotlib
+tqdm
+pandas
+numpy
+silx

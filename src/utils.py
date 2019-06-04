@@ -49,7 +49,6 @@ def split_train_validation(stories, labels, perc_validation=0.2, shuffle=True):
 
     return train_stories, validation_stories
 
-
 def random_idx_gen(start,end):
     indices = list(range(start,end))
 
@@ -57,8 +56,6 @@ def random_idx_gen(start,end):
         random.shuffle(indices)
         for el in indices:
             yield el
-
-
 
 def save_models(models, path):
     '''
