@@ -65,8 +65,8 @@ def save_models(models, path):
     dict_m = {}
     for model, name in models:
         dict_m[name] = model.state_dict()
-
     torch.save(dict_m, path)
+    print(f"Saved model: {name}!")
 
 def load_models(models, path):
     '''

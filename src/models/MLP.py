@@ -50,7 +50,6 @@ class MLP(nn.Module):
         '''
         :param x: (n_features)
         '''
-        x = x.long()
         for i in range(0,len(self.hidden_dims)):
             x = self.linears[i](x)
             x = self.activation(x)

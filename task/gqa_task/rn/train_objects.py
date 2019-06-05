@@ -33,6 +33,8 @@ def get_size(dataset_questions_path, validation=False):
     
 
 def get_batch(questions_path, features_path, batch_size, device):
+    OBJECT_TRIM = 10
+    
     questions = load_dict(questions_path)
     questions_ids = questions.keys()
     
@@ -40,7 +42,13 @@ def get_batch(questions_path, features_path, batch_size, device):
     question_batch = []
     answer_ground_truth_batch = []
     object_features_batch = [] #64*57*2048
-    objectsNum_batch = []
+    
+    #objectsNum_batch = [] NO  ES USADO
+    
+    #add tensor of zeros of size OBJECT_TRIM*2048 to list
+    aux_tensor = torch.zeros((OBJECT_TRIM, 2048), device=device)
+    object_features_batch.append(aux_tensor)
+    
     for question_id in questions_ids:
         question = questions[question_id]["question"]
         answer = questions[question_id]["answer"]
@@ -51,34 +59,44 @@ def get_batch(questions_path, features_path, batch_size, device):
         objectNum = features_dict["objectNum"]
         # features = add_padding_features(features, objectNum)
 
-        features = torch.FloatTensor(features, device=device).long()
-        
+        #features = torch.FloatTensor(features, device=device).long()
+        if len(features)>OBJECT_TRIM:
+            features= features[:OBJECT_TRIM]
+        features = torch.tensor(features, device=device) # dtype=torch.long
         object_features_batch.append(features)
         answer_ground_truth_batch.append(answer)
         question_batch.append(question)
-        objectsNum_batch.append(objectNum)
+        #objectsNum_batch.append(objectNum)
         
         i += 1
-        
-        if i == batch_size:
-            print(f"Dimensions before padding: {object_features_batch[0].shape}")
-            # print(f"type(object_features_batch[0]): {type(object_features_batch[0])}")
-            object_features_batch = pad_sequence(object_features_batch, batch_first=True).long()
-            print(f"Dimensions after padding: {object_features_batch[0].shape}")
 
-            # objectsNum_batch = torch.FloatTensor(objectsNum_batch, device=device).long() 
-            print(objectsNum_batch[0])
-            print("Type antes: ", type(objectsNum_batch[0]))
-            objectsNum_batch = np.array(objectsNum_batch).astype(int)
-            print("Type despues: ", type(objectsNum_batch[0]))
-            print(objectsNum_batch[0])
+
+        if i == batch_size:
+
             
-            yield (question_batch, answer_ground_truth_batch, object_features_batch, objectsNum_batch)
+            # Pad of tensor that have less than OBJECT_TRIM objects, and join all in one tensor:
+            object_features_batch = pad_sequence(object_features_batch, batch_first=True).to(device)
+            #print(f"Dimensions after padding: {object_features_batch.shape}")
+            
+            #remove aux_tensor
+            object_features_batch = object_features_batch[1:,:,:]
+            
+            # objectsNum_batch = torch.FloatTensor(objectsNum_batch, device=device).long() 
+            #print(objectsNum_batch[0])
+            #print("Type antes: ", type(objectsNum_batch[0]))
+            #objectsNum_batch = np.array(objectsNum_batch).astype(int)
+            #print("Type despues: ", type(objectsNum_batch[0]))
+            #print(objectsNum_batch[0])
+                        
+            #yield (question_batch, answer_ground_truth_batch, object_features_batch, objectsNum_batch)
+            yield (question_batch, answer_ground_truth_batch, object_features_batch) 
             i = 0
             question_batch = []
             answer_ground_truth_batch = []
             object_features_batch = []
-            objectsNum_batch = []
+            #objectsNum_batch = []
+            aux_tensor = torch.zeros((OBJECT_TRIM, 2048), device=device)
+            object_features_batch.append(aux_tensor)
     
 
 def train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, epochs, lstm, rn, criterion, optimizer, no_save, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, print_every=1):
@@ -98,18 +116,22 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
     for i in range(epochs):
         num_batch = DATASET_TRAIN_SIZE/BATCH_SIZE
         pbar = tqdm(total=num_batch)
-        
+        print(f"Traning epochs {i}")
+
         dataset_size_remain = DATASET_TRAIN_SIZE
         
+        batch = get_batch(train_questions_path, features_path,  BATCH_SIZE, device)
         while dataset_size_remain > 0:
             
-            batch_size = min(BATCH_SIZE, dataset_size_remain)
-            dataset_size_remain -= batch_size
+            if dataset_size_remain < BATCH_SIZE:
+                break
+            dataset_size_remain -= BATCH_SIZE
+            #dataset_size_remain = 0 #TODO
             
-            batch = get_batch(train_questions_path, features_path,  batch_size, device)
-            
-            question_batch, answer_ground_truth_batch, object_features_batch, objectsNum_batch = next(batch)
+            #question_batch, answer_ground_truth_batch, object_features_batch, objectsNum_batch = next(batch)
+            question_batch, answer_ground_truth_batch, object_features_batch = next(batch)
 
+            
             # Reset model
             
             set_train_mode(rn)
@@ -134,9 +156,13 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
             ## Pass question through LSTM
             question_emb_batch, h_q = lstm.process_question(question_batch, h_q)
             question_emb_batch = question_emb_batch[:,-1]
+            
+            #question_emb_batch.size() = torch.Size([64, 256])
+            # print(f"question_emb_batch.size() {question_emb_batch.size()}") 
 
             ## Pass question emb and object features to the Relation Network
-            rr = rn(object_features_batch, question_emb_batch, objectsNum_batch)
+            #rr = rn(object_features_batch, question_emb_batch, objectsNum_batch)
+            rr = rn(object_features_batch, question_emb_batch)
 
             # Adjust weight
             loss = criterion(rr, answer_ground_truth_batch)
@@ -150,26 +176,28 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
 
             train_losses.append(loss.item())
             pbar.update()
+            
         pbar.close()
+        print("((i+1) %  print_every): ", ((i+1) %  print_every))
+        # if ( ((i+1) %  print_every) == 0):
+        print("Epoch ", i+1, "/ ", epochs)
+        avg_train_losses.append(sum(train_losses)/len(train_losses))
+        avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
 
-        if ( ((i+1) %  print_every) == 0):
-            print("Epoch ", i+1, "/ ", epochs)
-            avg_train_losses.append(sum(train_losses)/len(train_losses))
-            avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
+        val_loss, val_accuracy = test(validation_questions_path, features_path,BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH)
+        val_accuracies.append(val_accuracy)
+        val_losses.append(val_loss)
+        
 
-            val_loss, val_accuracy = test(validation_questions_path, features_path,BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH)
-            val_accuracies.append(val_accuracy)
-            val_losses.append(val_loss)
+        if not no_save:
+            if val_losses[-1] < best_val:
+                save_models([(lstm, names_models[0]), (rn, names_models[1])], saving_path_rn)
+                best_val = val_losses[-1]
 
-            if not no_save:
-                if val_losses[-1] < best_val:
-                    save_models([(lstm, names_models[0]), (rn, names_models[1])], saving_path_rn)
-                    best_val = val_losses[-1]
-
-            print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
-            print("Train accuracy: ", avg_train_accuracies[-1], ". Validation accuracy: ", val_accuracies[-1])
-            train_losses = []
-            train_accuracies = []
+        print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
+        print("Train accuracy: ", avg_train_accuracies[-1], ". Validation accuracy: ", val_accuracies[-1])
+        train_losses = []
+        train_accuracies = []
 
     return avg_train_losses, avg_train_accuracies, val_losses[1:], val_accuracies
 
@@ -185,22 +213,35 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
          
         dataset_size_remain = get_size(dataset_questions_path)
         
+        batch = get_batch(dataset_questions_path, features_path, BATCH_SIZE, device)
+
+        if test_mode:
+            print("Testing")
+        else:
+            print("Validation")
+
+        #pbar = tqdm(total=num_batch)
+
+
+        batch_number = 0
         while dataset_size_remain > 0:
             
             # Get batch 
             
-            batch_size = min(BATCH_SIZE, dataset_size_remain)
-            dataset_size_remain -= batch_size
+            if dataset_size_remain < BATCH_SIZE:
+                break
+            dataset_size_remain -= BATCH_SIZE
+            #dataset_size_remain = 0 #TODO
             
-            batch = get_batch(dataset_questions_path, features_path, batch_size, device)
         
-            question_batch, answer_ground_truth_batch, object_features_batch, objectsNum_batch = next(batch)
+            #question_batch, answer_ground_truth_batch, object_features_batch, objectsNum_batch = next(batch)
+            question_batch, answer_ground_truth_batch, object_features_batch = next(batch)
 
             h_q = lstm.reset_hidden_state()
 
             question_batch, answer_ground_truth_batch = vectorize_gqa(question_batch, answer_ground_truth_batch,
                                                             questions_dictionary , answers_dictionary,
-                                                            batch_size, device, MAX_QUESTION_LENGTH)
+                                                            BATCH_SIZE, device, MAX_QUESTION_LENGTH)
 
             ## Pass question through LSTM
             question_emb_batch, h_q = lstm.process_question(question_batch, h_q)
@@ -214,8 +255,14 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
 
             correct, _ = get_answer(rr, answer_ground_truth_batch)
             val_accuracy += correct
+            
+            batch_number += 1
 
-        val_accuracy /= float(dataset_size_remain)
-        val_loss /= float(dataset_size_remain)
+            #pbar.update()
+
+        #pbar.close()
+
+        val_accuracy /= float(batch_number)
+        val_loss /= float(batch_number)
 
         return val_loss, val_accuracy

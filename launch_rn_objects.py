@@ -11,7 +11,7 @@ from task.gqa_task.rn.train_objects import train, test
 from utils.generate_dictionary import generate_questions_dict, generate_answers_dict, load_dict
 
 parser = argparse.ArgumentParser()
-parser.add_argument('--epochs', type=int, default=1, help='epochs to train.')
+parser.add_argument('--epochs', type=int, default=10, help='epochs to train.')
 
 # g-mpl arguments
 parser.add_argument('--object_dim', type=int, default=2048, help='number of features of each object')
@@ -39,15 +39,16 @@ parser.add_argument('--weight_decay', type=float, default=0, help='optimizer hyp
 #parser.add_argument('--learning_rate', type=float, default=2e-4, help='optimizer hyperparameter')
 parser.add_argument('--learning_rate', type=float, default=1e-4, help='optimizer hyperparameter')
 
-parser.add_argument('--cuda', type=bool, default=False, help='use gpu')
+parser.add_argument('--cuda', type=bool, default=True, help='use gpu')
 parser.add_argument('--load', action="store_true", help=' load saved model')
-parser.add_argument('--no_save', action="store_true", help='disable model saving')
+parser.add_argument('--no_save', type=bool, default=False, help='disable model saving')
 parser.add_argument('--load_dictionary', type=bool, default=False, help='load dict from path')
 parser.add_argument('--dictionary_path', action="store_true", help='load dict from path')
 parser.add_argument('--print_every', type=int, default=500, help='print information every print_every steps')
 args = parser.parse_args()
 
 print(f"load dict bool: {args.load_dictionary}")
+print(f"save model bool: {not args.no_save}")
 
 mode = 'cpu'
 if args.cuda:
@@ -71,9 +72,9 @@ features_path = "./data/miniGQA/miniGQA_objectFeatures.h5"
 questions_dictionary_path = "./data/miniGQA/questions_dictionary.json"
 answers_dictionary_path = "./data/miniGQA/answers_dictionary.json"
 MAX_QUESTION_LENGTH = 136
-BATCH_SIZE = 64
+BATCH_SIZE = 128
 
-torch.set_default_tensor_type(torch.FloatTensor)
+#torch.set_default_tensor_type(torch.FloatTensor)
 
 if not args.load_dictionary:
     questions_dictionary = generate_questions_dict(train_questions_path, test_questions_path, validation_questions_path, questions_dictionary_path)

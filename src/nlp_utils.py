@@ -44,13 +44,16 @@ def vectorize_gqa(batch_question, batch_answer, dictionary_question , dictionary
         q_v = [dictionary_question.index(words[i]) if i < len(words) else padding_symbol_Index for i in range(MAX_QUESTION_LENGTH)]
         # q_v = [dictionary_question.index(words[i]) for i in range(MAX_QUESTION_LENGTH) if i < len(words) else paddingIndex]
         question_v.append(q_v)
-        
     
-    question_tensor = torch.FloatTensor(question_v, device=device).long()
+    # print(f"type(question_v[0]): {type(question_v[0])}")
+    # print(f"len(question_v[0]): {len(question_v[0])}")
+    question_tensor = torch.tensor(question_v, device=device)
+    # print(f"question_tensor.size()): {question_tensor.size()}")
+    #question_tensor = torch.FloatTensor(question_v, device=device).long()
     
     for i, answer in enumerate(batch_answer):        
         answers_v[i] = dictionary_answer.index(answer)
-    
+    # print(f"answers_v.size()): {answers_v.size()}")
     return question_tensor, answers_v
  
 

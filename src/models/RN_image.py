@@ -35,7 +35,7 @@ class RelationNetwork(nn.Module):
 
 
 
-    def forward(self, x, q=None, objectNums=0):
+    def forward(self, x, q=None):#, objectNums=0):
         '''
         :param x: (batch, n_facts, length_fact)
         :param q: (batch, length_q) query, optional.
@@ -65,10 +65,15 @@ class RelationNetwork(nn.Module):
         if q is not None:
             q = q.unsqueeze(1)
             q = q.repeat(1,xi.size(1),1)
-            pair_concat = torch.cat((xi.long(),xj.long(),q.long()), dim=2).long()
+            pair_concat = torch.cat((xi,xj,q), dim=2)
         else:
-            pair_concat = torch.cat((xi,xj), dim=2).long()
+            pair_concat = torch.cat((xi,xj), dim=2)
 
+
+        #torch.Size([64, 10000, 4352])
+        # 10000 = 100*100*1
+        # 4352 = 2048+2048+256
+        # print(f"pair_concat.size() = {pair_concat.size()}")
 
         relations = self.g(pair_concat)
 
