@@ -40,7 +40,7 @@ parser.add_argument('--weight_decay', type=float, default=0, help='optimizer hyp
 parser.add_argument('--learning_rate', type=float, default=1e-4, help='optimizer hyperparameter')
 
 parser.add_argument('--cuda', type=bool, default=True, help='use gpu')
-parser.add_argument('--load', action="store_true", help=' load saved model')
+parser.add_argument('--load', type=bool, default=False, help=' load saved model')
 parser.add_argument('--no_save', type=bool, default=False, help='disable model saving')
 parser.add_argument('--load_dictionary', type=bool, default=False, help='load dict from path')
 parser.add_argument('--dictionary_path', action="store_true", help='load dict from path')
@@ -73,6 +73,7 @@ questions_dictionary_path = "./data/miniGQA/questions_dictionary.json"
 answers_dictionary_path = "./data/miniGQA/answers_dictionary.json"
 MAX_QUESTION_LENGTH = 136
 BATCH_SIZE = 128
+isObjectFeatures = True
 
 #torch.set_default_tensor_type(torch.FloatTensor)
 
@@ -100,11 +101,11 @@ criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 
 if args.epochs > 0:
     print("Start training")
-    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, args.epochs, lstm, rn, criterion, optimizer, args.no_save, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, args.print_every)
+    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, args.epochs, lstm, rn, criterion, optimizer, args.no_save, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, args.print_every)
     print("End training!")
 
 print("Testing...")
-avg_test_loss, avg_test_accuracy = test(test_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, test_mode=True)
+avg_test_loss, avg_test_accuracy = test(test_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, test_mode=True)
 
 
 

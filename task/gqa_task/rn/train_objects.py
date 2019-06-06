@@ -11,6 +11,9 @@ from silx.io.dictdump import h5todict
 from utils.generate_dictionary import load_dict
 from torch.nn.utils.rnn import pad_sequence
 import numpy as np
+import win32api
+from functools import partial
+import time
 
 DATASET_VALIDATION_SIZE = 0
 
@@ -32,7 +35,7 @@ def get_size(dataset_questions_path, validation=False):
     return size
     
 
-def get_batch(questions_path, features_path, batch_size, device):
+def get_batch(questions_path, features_path, batch_size, device, isObjectFeatures):
     OBJECT_TRIM = 10
     
     questions = load_dict(questions_path)
@@ -41,13 +44,14 @@ def get_batch(questions_path, features_path, batch_size, device):
     i = 0
     question_batch = []
     answer_ground_truth_batch = []
-    object_features_batch = [] #64*57*2048
+    object_features_batch = [] #64*OBJECT_TRIM*2048
     
     #objectsNum_batch = [] NO  ES USADO
     
-    #add tensor of zeros of size OBJECT_TRIM*2048 to list
-    aux_tensor = torch.zeros((OBJECT_TRIM, 2048), device=device)
-    object_features_batch.append(aux_tensor)
+    if isObjectFeatures:
+        #add tensor of zeros of size OBJECT_TRIM*2048 to list
+        aux_tensor = torch.zeros((OBJECT_TRIM, 2048), device=device)
+        object_features_batch.append(aux_tensor)
     
     for question_id in questions_ids:
         question = questions[question_id]["question"]
@@ -56,13 +60,16 @@ def get_batch(questions_path, features_path, batch_size, device):
         
         features_dict = load_dict_from_h5(features_path, imageId)
         features = features_dict["features"] #features_h5[imageId]["features"]
-        objectNum = features_dict["objectNum"]
+        #objectNum = features_dict["objectNum"]
         # features = add_padding_features(features, objectNum)
 
         #features = torch.FloatTensor(features, device=device).long()
-        if len(features)>OBJECT_TRIM:
-            features= features[:OBJECT_TRIM]
+        if isObjectFeatures:
+            if len(features)>OBJECT_TRIM:
+                features= features[:OBJECT_TRIM]
         features = torch.tensor(features, device=device) # dtype=torch.long
+        if not isObjectFeatures:
+            features = features.view(-1,49).transpose(0,1)
         object_features_batch.append(features)
         answer_ground_truth_batch.append(answer)
         question_batch.append(question)
@@ -70,16 +77,15 @@ def get_batch(questions_path, features_path, batch_size, device):
         
         i += 1
 
-
         if i == batch_size:
-
-            
             # Pad of tensor that have less than OBJECT_TRIM objects, and join all in one tensor:
             object_features_batch = pad_sequence(object_features_batch, batch_first=True).to(device)
-            #print(f"Dimensions after padding: {object_features_batch.shape}")
+            if isObjectFeatures:
+                #print(f"Dimensions after padding: {object_features_batch.shape}")
             
-            #remove aux_tensor
-            object_features_batch = object_features_batch[1:,:,:]
+                #remove aux_tensor
+                object_features_batch = object_features_batch[1:,:,:]
+
             
             # objectsNum_batch = torch.FloatTensor(objectsNum_batch, device=device).long() 
             #print(objectsNum_batch[0])
@@ -95,12 +101,28 @@ def get_batch(questions_path, features_path, batch_size, device):
             answer_ground_truth_batch = []
             object_features_batch = []
             #objectsNum_batch = []
-            aux_tensor = torch.zeros((OBJECT_TRIM, 2048), device=device)
-            object_features_batch.append(aux_tensor)
-    
+            if isObjectFeatures:
+                aux_tensor = torch.zeros((OBJECT_TRIM, 2048), device=device)
+                object_features_batch.append(aux_tensor)
 
-def train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, epochs, lstm, rn, criterion, optimizer, no_save, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, print_every=1):
+#Manejo ctrl + c
+lstm_model = None
+rn_model = None
+def signalHandler(sig, func=None):
+    print("Aborting but saving models first")
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    save_models([(lstm_model, names_models[0]), (rn_model, names_models[1])], f"saved_models/aborted_{timestr}.tar")
+    raise KeyboardInterrupt
+
+
+
+def train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, epochs, lstm, rn, criterion, optimizer, no_save, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, print_every=1):
     global DATASET_VALIDATION_SIZE
+    global lstm_model
+    global rn_model
+    rn_model = rn
+    lstm_model = lstm
+    win32api.SetConsoleCtrlHandler(signalHandler, 1)
     avg_train_accuracies = []
     train_accuracies = []
     avg_train_losses = []
@@ -120,7 +142,7 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
 
         dataset_size_remain = DATASET_TRAIN_SIZE
         
-        batch = get_batch(train_questions_path, features_path,  BATCH_SIZE, device)
+        batch = get_batch(train_questions_path, features_path,  BATCH_SIZE, device, isObjectFeatures)
         while dataset_size_remain > 0:
             
             if dataset_size_remain < BATCH_SIZE:
@@ -184,7 +206,7 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
         avg_train_losses.append(sum(train_losses)/len(train_losses))
         avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
 
-        val_loss, val_accuracy = test(validation_questions_path, features_path,BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH)
+        val_loss, val_accuracy = test(validation_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, test_mode=False)
         val_accuracies.append(val_accuracy)
         val_losses.append(val_loss)
         
@@ -201,7 +223,7 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
 
     return avg_train_losses, avg_train_accuracies, val_losses[1:], val_accuracies
 
-def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, test_mode=True):
+def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, test_mode=True):
 
     val_loss = 0.
     val_accuracy = 0.
@@ -213,7 +235,7 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
          
         dataset_size_remain = get_size(dataset_questions_path)
         
-        batch = get_batch(dataset_questions_path, features_path, BATCH_SIZE, device)
+        batch = get_batch(dataset_questions_path, features_path, BATCH_SIZE, device, isObjectFeatures)
 
         if test_mode:
             print("Testing")

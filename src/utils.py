@@ -65,8 +65,8 @@ def save_models(models, path):
     dict_m = {}
     for model, name in models:
         dict_m[name] = model.state_dict()
+        print(f"Saved model: {name}!")
     torch.save(dict_m, path)
-    print(f"Saved model: {name}!")
 
 def load_models(models, path):
     '''
@@ -77,6 +77,7 @@ def load_models(models, path):
     checkpoint = torch.load(path)
     for model, name in models:
         model.load_state_dict(checkpoint[name])
+        print(f"modelo {name} cargado!")
 
 
 saving_path_dict = 'saved_models/dict.data'
