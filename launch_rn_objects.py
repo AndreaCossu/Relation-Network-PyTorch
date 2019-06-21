@@ -6,10 +6,10 @@ import argparse
 import os
 from itertools import chain
 from src.utils import files_names_test_en, files_names_train_en, files_names_test_en_valid, files_names_train_en_valid, files_names_val_en_valid
-from src.utils import saving_path_rn, names_models, load_models, split_train_validation, emergency_save
-from task.gqa_task.rn.train_objects import train, test
-from utils.generate_dictionary import generate_questions_dict, generate_answers_dict, load_dict
+from task.gqa_task.rn.train_objects import test, train
 import traceback
+from src.utils import saving_path_rn, names_models, load_models, split_train_validation, emergency_save, load_training_state, save_training_state
+from utils.generate_dictionary import generate_questions_dict, generate_answers_dict, load_dict
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--epochs', type=int, default=10, help='epochs to train.')
@@ -43,7 +43,7 @@ parser.add_argument('--learning_rate', type=float, default=1e-4, help='optimizer
 parser.add_argument('--cuda', type=bool, default=True, help='use gpu')
 parser.add_argument('--load', type=bool, default=False, help=' load saved model')
 parser.add_argument('--no_save', type=bool, default=False, help='disable model saving')
-parser.add_argument('--load_dictionary', type=bool, default=False, help='load dict from path')
+parser.add_argument('--load_dictionary', type=bool, default=True, help='load dict from path')
 parser.add_argument('--dictionary_path', action="store_true", help='load dict from path')
 parser.add_argument('--print_every', type=int, default=500, help='print information every print_every steps')
 args = parser.parse_args()
@@ -73,6 +73,8 @@ validation_questions_path = "./data/miniGQA/new_valid_filtered.json"
 features_path = "./data/miniGQA/miniGQA_objectFeatures.h5"
 questions_dictionary_path = "./data/miniGQA/questions_dictionary.json"
 answers_dictionary_path = "./data/miniGQA/answers_dictionary.json"
+
+execution_state_path = "./saved_models/last_execution_state.json"
 MAX_QUESTION_LENGTH = 136
 BATCH_SIZE = 32
 isObjectFeatures = True
@@ -94,8 +96,11 @@ lstm = LSTM(args.hidden_dim_lstm, BATCH_SIZE, questions_dict_size, args.emb_dim,
 rn = RelationNetwork(args.object_dim, args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.dropouts_g, args.drop_prob_g, args.hidden_dims_f, questions_dict_size, args.dropouts_f, args.drop_prob_f, BATCH_SIZE, device).to(device)
 print("Modelos definidos.")
 
+
+past_lists = ([],[],[],[])
 if args.load:
     load_models([(lstm, names_models[0]), (rn, names_models[1])], saving_path_rn)
+    past_lists = load_training_state(execution_state_path)
 
 optimizer = torch.optim.Adam(chain(lstm.parameters(), rn.parameters()), args.learning_rate, weight_decay=args.weight_decay)
 
@@ -104,9 +109,11 @@ criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 if args.epochs > 0:
     print("Start training")
     try:
-        avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, args.epochs, lstm, rn, criterion, optimizer, args.no_save, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, args.print_every)
+        avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, args.epochs,
+                                                                                   lstm, rn, criterion, optimizer, args.no_save, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, past_lists, args.print_every)
     except Exception as e:
         emergency_save([(lstm, names_models[0]), (rn, names_models[1])])
+        print(traceback.format_exc())
         print(f"error: {e}")
     print("End training!")
 

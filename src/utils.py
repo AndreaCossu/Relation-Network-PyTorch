@@ -3,6 +3,7 @@ from sklearn.model_selection import train_test_split
 import random
 import pickle
 import time
+import json
 
 
 def save_dict(dictionary):
@@ -93,6 +94,20 @@ def load_models(models, path):
     for model, name in models:
         model.load_state_dict(checkpoint[name])
         print(f"modelo {name} cargado!")
+
+
+def save_training_state(avg_train_losses, avg_train_accuracies, val_losses, val_accuracies, path):
+    json_file = {"avg_train_losses": avg_train_losses,
+                 "avg_train_accuracies": avg_train_accuracies,
+                 "val_losses": val_losses,
+                 "val_accuracies": val_accuracies}
+    with open(path, "w") as f:
+        json.dump(json_file, f)
+
+def load_training_state(path):
+    with open(path, 'r') as f:
+        json_file = json.load(f)
+    return [json_file["avg_train_losses"], json_file["avg_train_accuracies"], json_file["val_losses"], json_file["val_accuracies"]]
 
 
 saving_path_dict = 'saved_models/dict.data'

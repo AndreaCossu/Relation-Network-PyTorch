@@ -1,5 +1,5 @@
 import torch
-from src.utils import save_models, saving_path_rn, get_answer, names_models
+from src.utils import save_models, saving_path_rn, get_answer, names_models, save_training_state
 from src.utils import  random_idx_gen
 from src.nlp_utils import vectorize_gqa
 import os
@@ -18,6 +18,7 @@ import csv
 
 DATASET_VALIDATION_SIZE = 0
 csv_path = "./results"
+execution_state_path = "./saved_models/last_execution_state.json"
 
 def set_train_mode(module):
     module.train()
@@ -37,7 +38,7 @@ def get_size(dataset_questions_path):
     return size
     
 
-def get_batch(questions_path, features_path, batch_size, device, isObjectFeatures, categoryBatch=True):
+def get_batch(questions_path, features_path, batch_size, device, isObjectFeatures, categoryBatch=False):
     OBJECT_TRIM = 42
     
     questions = load_dict(questions_path)
@@ -60,8 +61,9 @@ def get_batch(questions_path, features_path, batch_size, device, isObjectFeature
         question = questions[question_id]["question"]
         answer = questions[question_id]["answer"]
         imageId = questions[question_id]["imageId"]
-        category = {"group": questions[question_id]["group"],
-                    "types":questions[question_id]["types"]}
+        if categoryBatch:
+            category = {"group": questions[question_id]["group"],
+                        "types":questions[question_id]["types"]}
         
         features_dict = load_dict_from_h5(features_path, imageId)
         features = features_dict["features"] #features_h5[imageId]["features"]
@@ -125,17 +127,18 @@ def signalHandler(sig, func=None):
     save_models([(lstm_model, names_models[0]), (rn_model, names_models[1])], f"saved_models/aborted_{timestr}.tar")
     raise KeyboardInterrupt
 
-def train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, epochs, lstm, rn, criterion, optimizer, no_save, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, print_every=1):
+
+def train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, epochs,
+          lstm, rn, criterion, optimizer, no_save, questions_dictionary, answers_dictionary, device,
+          MAX_QUESTION_LENGTH, isObjectFeatures, past_lists=[[],[],[],[]], print_every=1):
     global DATASET_VALIDATION_SIZE
     global lstm_model
     global rn_model
     rn_model = rn
     lstm_model = lstm
     win32api.SetConsoleCtrlHandler(signalHandler, 1)
-    avg_train_accuracies = []
-    train_accuracies = []
-    avg_train_losses = []
-    train_losses = []
+
+    avg_train_accuracies, train_accuracies, avg_train_losses, train_losses = past_lists
 
     val_accuracies = []
     val_losses = [1000.]
@@ -157,7 +160,7 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
             if dataset_size_remain < BATCH_SIZE:
                 break
             dataset_size_remain -= BATCH_SIZE
-            #dataset_size_remain = 0 #TODO
+            # dataset_size_remain = 0 #TODO:
             
             #question_batch, answer_ground_truth_batch, object_features_batch, objectsNum_batch = next(batch)
             question_batch, answer_ground_truth_batch, object_features_batch = next(batch)
@@ -202,7 +205,7 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
 
             # For calculating accuracies and losses
             with torch.no_grad():
-                correct, _ = get_answer(rr, answer_ground_truth_batch)
+                correct, _, _ = get_answer(rr, answer_ground_truth_batch)
                 train_accuracies.append(correct)
 
             train_losses.append(loss.item())
@@ -219,11 +222,17 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
         val_accuracies.append(val_accuracy)
         val_losses.append(val_loss)
         
-
         if not no_save:
             if val_losses[-1] < best_val:
                 save_models([(lstm, names_models[0]), (rn, names_models[1])], saving_path_rn)
+                save_training_state(avg_train_losses, avg_train_accuracies,
+                                    val_losses, val_accuracies, execution_state_path)
                 best_val = val_losses[-1]
+            save_models([(lstm, names_models[0]),
+                         (rn, names_models[1])], f"saved_models/epoch_{i+1}.tar")
+            save_training_state(avg_train_losses, avg_train_accuracies,
+                                val_losses, val_accuracies, f"./saved_models/epoch_{i+1}_execution_state.json")
+            
 
         print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
         print("Train accuracy: ", avg_train_accuracies[-1], ". Validation accuracy: ", val_accuracies[-1])
@@ -260,8 +269,6 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
         #pbar = tqdm(total=num_batch)
         batch_number = 0
         while dataset_size_remain > 0:
-            
-            print(dataset_size_remain)
             
             # Get batch 
             
@@ -334,9 +341,6 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
                         
             
             batch_number += 1
-            
-            if batch_number == 40:
-                break
             #pbar.update() 
 
 
@@ -372,11 +376,6 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
             rights, total = types["detailed"][category]
             detailed_acc.append([category, 100*rights/total])
         write_csv(detailed_acc, "detailed_accuracy")
-               
-         
-        
-
-            
 
         #pbar.close()
 
@@ -439,7 +438,6 @@ def validation(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, crit
 
             correct, _, _ = get_answer(rr, answer_ground_truth_batch, return_answer=True)
             val_accuracy += correct
-            
             
             batch_number += 1
 
