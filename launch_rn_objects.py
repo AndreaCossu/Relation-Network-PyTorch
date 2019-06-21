@@ -6,9 +6,10 @@ import argparse
 import os
 from itertools import chain
 from src.utils import files_names_test_en, files_names_train_en, files_names_test_en_valid, files_names_train_en_valid, files_names_val_en_valid
-from src.utils import saving_path_rn, names_models, load_models, split_train_validation
+from src.utils import saving_path_rn, names_models, load_models, split_train_validation, emergency_save
 from task.gqa_task.rn.train_objects import train, test
 from utils.generate_dictionary import generate_questions_dict, generate_answers_dict, load_dict
+import traceback
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--epochs', type=int, default=10, help='epochs to train.')
@@ -49,6 +50,7 @@ args = parser.parse_args()
 
 print(f"load dict bool: {args.load_dictionary}")
 print(f"save model bool: {not args.no_save}")
+print(f"epochs: {args.epochs}")
 
 mode = 'cpu'
 if args.cuda:
@@ -72,7 +74,7 @@ features_path = "./data/miniGQA/miniGQA_objectFeatures.h5"
 questions_dictionary_path = "./data/miniGQA/questions_dictionary.json"
 answers_dictionary_path = "./data/miniGQA/answers_dictionary.json"
 MAX_QUESTION_LENGTH = 136
-BATCH_SIZE = 128
+BATCH_SIZE = 32
 isObjectFeatures = True
 
 #torch.set_default_tensor_type(torch.FloatTensor)
@@ -101,16 +103,23 @@ criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 
 if args.epochs > 0:
     print("Start training")
-    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, args.epochs, lstm, rn, criterion, optimizer, args.no_save, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, args.print_every)
+    try:
+        avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, args.epochs, lstm, rn, criterion, optimizer, args.no_save, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, args.print_every)
+    except Exception as e:
+        emergency_save([(lstm, names_models[0]), (rn, names_models[1])])
+        print(f"error: {e}")
     print("End training!")
 
 print("Testing...")
-avg_test_loss, avg_test_accuracy = test(test_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, test_mode=True)
+try:
+    avg_test_loss, avg_test_accuracy = test(test_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures)
+    print("Test accuracy: ", avg_test_accuracy)
+    print("Test loss: ", avg_test_loss)
+except Exception as e:
+    emergency_save([(lstm, names_models[0]), (rn, names_models[1])])
+    print(traceback.format_exc())
+    print(f"error: {e}")
 
-
-
-print("Test accuracy: ", avg_test_accuracy)
-print("Test loss: ", avg_test_loss)
 
 if args.epochs > 0:
     import matplotlib

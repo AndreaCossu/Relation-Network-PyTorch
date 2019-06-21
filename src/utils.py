@@ -2,6 +2,7 @@ import torch
 from sklearn.model_selection import train_test_split
 import random
 import pickle
+import time
 
 
 def save_dict(dictionary):
@@ -14,7 +15,7 @@ def load_dict():
 
     return dictionary
 
-def get_answer(output, target, vocabulary=None):
+def get_answer(output, target, vocabulary=None, return_answer=False):
     '''
     :param output: tensor representing output of the model
     :param vocabulary: vocabulary of all the words
@@ -33,7 +34,10 @@ def get_answer(output, target, vocabulary=None):
         else:
             answer = None
 
-        return correct, answer
+        if return_answer:
+            return correct, answer, (idx == target).tolist()
+        return correct, answer, []
+    
 
 def split_train_validation(stories, labels, perc_validation=0.2, shuffle=True):
     '''
@@ -67,6 +71,17 @@ def save_models(models, path):
         dict_m[name] = model.state_dict()
         print(f"Saved model: {name}!")
     torch.save(dict_m, path)
+
+
+def emergency_save(models, wasError=True):
+    timestr = time.strftime("%Y%m%d-%H%M%S")
+    if wasError:
+        print("Error but saving models first")
+        filename = f"saved_models/error_{timestr}.tar"
+    else:
+        print("Aborting but saving models first")
+        filename = f"saved_models/aborted_{timestr}.tar"
+    save_models(models, filename)
 
 def load_models(models, path):
     '''

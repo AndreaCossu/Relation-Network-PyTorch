@@ -28,15 +28,15 @@ def load_dict_from_h5(file_path, h5_path):
     dictionary = h5todict(file_path, h5_path)
     return dictionary
 
-def get_size(dataset_questions_path, validation=False):
+def get_size(dataset_questions_path):
     with open(dataset_questions_path, "r") as miniGQA_val:
         miniGQA = json.load(miniGQA_val)
         size = len(miniGQA.keys())
     return size
     
 
-def get_batch(questions_path, features_path, batch_size, device, isObjectFeatures):
-    OBJECT_TRIM = 10
+def get_batch(questions_path, features_path, batch_size, device, isObjectFeatures, categoryBatch=True):
+    OBJECT_TRIM = 42
     
     questions = load_dict(questions_path)
     questions_ids = questions.keys()
@@ -45,6 +45,7 @@ def get_batch(questions_path, features_path, batch_size, device, isObjectFeature
     question_batch = []
     answer_ground_truth_batch = []
     object_features_batch = [] #64*OBJECT_TRIM*2048
+    category_batch = []
     
     #objectsNum_batch = [] NO  ES USADO
     
@@ -57,6 +58,8 @@ def get_batch(questions_path, features_path, batch_size, device, isObjectFeature
         question = questions[question_id]["question"]
         answer = questions[question_id]["answer"]
         imageId = questions[question_id]["imageId"]
+        category = {"group": questions[question_id]["group"],
+                    "types":questions[question_id]["types"]}
         
         features_dict = load_dict_from_h5(features_path, imageId)
         features = features_dict["features"] #features_h5[imageId]["features"]
@@ -73,6 +76,8 @@ def get_batch(questions_path, features_path, batch_size, device, isObjectFeature
         object_features_batch.append(features)
         answer_ground_truth_batch.append(answer)
         question_batch.append(question)
+        if categoryBatch:
+            category_batch.append(category)
         #objectsNum_batch.append(objectNum)
         
         i += 1
@@ -95,11 +100,15 @@ def get_batch(questions_path, features_path, batch_size, device, isObjectFeature
             #print(objectsNum_batch[0])
                         
             #yield (question_batch, answer_ground_truth_batch, object_features_batch, objectsNum_batch)
-            yield (question_batch, answer_ground_truth_batch, object_features_batch) 
+            if categoryBatch:
+                yield (question_batch, answer_ground_truth_batch, object_features_batch, category_batch)
+            else:
+                yield (question_batch, answer_ground_truth_batch, object_features_batch) 
             i = 0
             question_batch = []
             answer_ground_truth_batch = []
             object_features_batch = []
+            category_batch = []
             #objectsNum_batch = []
             if isObjectFeatures:
                 aux_tensor = torch.zeros((OBJECT_TRIM, 2048), device=device)
@@ -114,8 +123,6 @@ def signalHandler(sig, func=None):
     save_models([(lstm_model, names_models[0]), (rn_model, names_models[1])], f"saved_models/aborted_{timestr}.tar")
     raise KeyboardInterrupt
 
-
-
 def train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, epochs, lstm, rn, criterion, optimizer, no_save, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, print_every=1):
     global DATASET_VALIDATION_SIZE
     global lstm_model
@@ -125,7 +132,7 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
     win32api.SetConsoleCtrlHandler(signalHandler, 1)
     avg_train_accuracies = []
     train_accuracies = []
-    avg_train_losses = []
+    avg_training_losses = []
     train_losses = []
 
     val_accuracies = []
@@ -133,7 +140,7 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
     best_val = val_losses[0]
     
     DATASET_TRAIN_SIZE = get_size(train_questions_path)
-    DATASET_VALIDATION_SIZE = get_size(validation_questions_path , validation=True)
+    DATASET_VALIDATION_SIZE = get_size(validation_questions_path)
 
     for i in range(epochs):
         num_batch = DATASET_TRAIN_SIZE/BATCH_SIZE
@@ -187,7 +194,7 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
             rr = rn(object_features_batch, question_emb_batch)
 
             # Adjust weight
-            loss = criterion(rr, answer_ground_truth_batch)
+            loss = criterion(rr, answer_ground_truth_batch) # batch_size
             loss.backward()
             optimizer.step()
 
@@ -206,7 +213,7 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
         avg_train_losses.append(sum(train_losses)/len(train_losses))
         avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
 
-        val_loss, val_accuracy = test(validation_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, test_mode=False)
+        val_loss, val_accuracy = validation(validation_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures)
         val_accuracies.append(val_accuracy)
         val_losses.append(val_loss)
         
@@ -223,7 +230,7 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
 
     return avg_train_losses, avg_train_accuracies, val_losses[1:], val_accuracies
 
-def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, test_mode=True):
+def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures):
 
     val_loss = 0.
     val_accuracy = 0.
@@ -234,17 +241,139 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
     with torch.no_grad():
          
         dataset_size_remain = get_size(dataset_questions_path)
-        
-        batch = get_batch(dataset_questions_path, features_path, BATCH_SIZE, device, isObjectFeatures)
 
-        if test_mode:
-            print("Testing")
-        else:
-            print("Validation")
+        print("Testing")
+        batch = get_batch(dataset_questions_path, features_path, BATCH_SIZE, device, isObjectFeatures, categoryBatch=True)
+
+        groups = {}
+        types = {"semantic":   {},
+                 "detailed":   {},
+                 "structural": {}
+                }
+        
+        #pbar = tqdm(total=num_batch)
+        batch_number = 0
+        while dataset_size_remain > 0:
+            
+            print(dataset_size_remain)
+            
+            # Get batch 
+            
+            if dataset_size_remain < BATCH_SIZE:
+                break
+            dataset_size_remain -= BATCH_SIZE
+            
+            #question_batch, answer_ground_truth_batch, object_features_batch, objectsNum_batch = next(batch)
+            question_batch, answer_ground_truth_batch, object_features_batch, category_batch = next(batch)
+
+            h_q = lstm.reset_hidden_state()
+
+            question_batch, answer_ground_truth_batch = vectorize_gqa(question_batch, answer_ground_truth_batch,
+                                                            questions_dictionary , answers_dictionary,
+                                                            BATCH_SIZE, device, MAX_QUESTION_LENGTH)
+
+            ## Pass question through LSTM
+            question_emb_batch, h_q = lstm.process_question(question_batch, h_q)
+            question_emb_batch = question_emb_batch[:, -1]
+
+            ## Pass question emb and object features to the Relation Network
+            rr = rn(object_features_batch, question_emb_batch)
+
+            loss = criterion(rr, answer_ground_truth_batch)
+            val_loss += loss.item()
+
+            correct, _, correct_answers = get_answer(rr, answer_ground_truth_batch, return_answer=True)
+            val_accuracy += correct
+            
+            """
+            Structure:
+                groups -> {
+                    "group_name1": (100, 200), -> This means 200 question were tested and 100 were correct, giving 50% accuracy
+                    "group_name2": (20, 30),
+                    "group_name3": (5, 8)
+                }
+                
+                types -> {
+                    "structural": {
+                        "struct1": (20, 30), -> same structure as the one on groups
+                        "struct2": (10, 15),
+                    },
+                    "semantic": {}, -> they might be empty (so might "groups")
+                    "detailed": {
+                        "det1": (1, 4),
+                        "det2": (30, 45)
+                    }
+                }
+            """
+            
+            # Obtain results for each group and type
+            for question, correct_answer in zip(category_batch, correct_answers):
+                
+                group = question["group"] # e.g. -> all color questions
+                if group is not None:
+                    group_rights, group_total = groups.get(group, (0, 0))
+                    groups[group] = (group_rights + correct_answer, group_total + 1)
+                else:
+                    group_rights, group_total = groups.get("None", (0, 0))
+                    groups["None"] = (group_rights + correct_answer, group_total + 1)
+                
+                for typ in question["types"]: # -> e.g. semantic
+                    type_category = question["types"][typ] # -> e.g. query
+                    if type_category is not None:
+                        category_rights, category_total = types[typ].get(type_category, (0, 0))
+                        types[typ][type_category] = (category_rights + correct_answer, category_total + 1)
+            
+            batch_number += 1
+            
+            if batch_number == 30:
+                break
+            #pbar.update() 
+
+
+        print(f"Accuracy seperated by group")
+        for group in groups:
+            rights, total = groups[group]
+            print(f"Group: {group} -> {rights}/{total} gives us {100*rights/total}% ")
+            
+        print("___________________________________")
+            
+        print(f"Accuracy seperated by types")
+        for typ in types:
+            print(f"Type: {typ}")
+            current_type = types[typ]
+            for category in current_type:
+                rights, total = current_type[category]
+                print(f"Category: {category} -> {rights}/{total} gives us {100*rights/total}% ")
+            print("___________________________________")
+                
+
+            
+
+        #pbar.close()
+
+        val_accuracy /= float(batch_number)
+        val_loss /= float(batch_number)
+
+        return val_loss, val_accuracy
+
+
+def validation(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, test_mode=True):
+
+    val_loss = 0.
+    val_accuracy = 0.
+
+    set_eval_mode(rn)
+    set_eval_mode(lstm)
+
+    with torch.no_grad():
+         
+        dataset_size_remain = get_size(dataset_questions_path)
+
+        print("Validation")
+        batch = get_batch(dataset_questions_path, features_path,
+                            BATCH_SIZE, device, isObjectFeatures)
 
         #pbar = tqdm(total=num_batch)
-
-
         batch_number = 0
         while dataset_size_remain > 0:
             
@@ -254,9 +383,7 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
                 break
             dataset_size_remain -= BATCH_SIZE
             #dataset_size_remain = 0 #TODO
-            
         
-            #question_batch, answer_ground_truth_batch, object_features_batch, objectsNum_batch = next(batch)
             question_batch, answer_ground_truth_batch, object_features_batch = next(batch)
 
             h_q = lstm.reset_hidden_state()
@@ -275,12 +402,13 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
             loss = criterion(rr, answer_ground_truth_batch)
             val_loss += loss.item()
 
-            correct, _ = get_answer(rr, answer_ground_truth_batch)
+            correct, _, _ = get_answer(rr, answer_ground_truth_batch, return_answer=True)
             val_accuracy += correct
+            
             
             batch_number += 1
 
-            #pbar.update()
+            #pbar.update()mn 
 
         #pbar.close()
 

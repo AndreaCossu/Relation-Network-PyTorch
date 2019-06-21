@@ -138,7 +138,7 @@ def train(train_questions_path, validation_questions_path, features_path, epochs
     best_val = val_losses[0]
     
     DATASET_TRAIN_SIZE = get_size(train_questions_path)
-    DATASET_VALIDATION_SIZE = get_size(validation_questions_path , validation=True)
+    DATASET_VALIDATION_SIZE = get_size(validation_questions_path)
     BATCH_SIZE = 64
     
     
