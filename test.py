@@ -83,50 +83,51 @@ from utils.generate_dictionary import load_dict
 questions_path = "./data/miniGQA/training_question_ids.json"
 questions = load_dict(questions_path)
 questions_ids = questions.keys()
-all_categories_batch = []
+all_categories = []
 
+print(f"amount of data: {len(questions_ids)}")
+
+group_list = []
+type_list =[]
 
 for question_id in questions_ids:
-    category = {"group": questions[question_id]["group"], "types":questions[question_id]["types"]}
+    q_type = questions[question_id]["group"]
+    q_group = questions[question_id]["types"]
+    #category = {"group": questions[question_id]["group"], "types":questions[question_id]["types"]}
+    #all_categories.append(category)
 
-print(category)
+    if not(q_group  in  group_list):
+        group_list.append(q_group)
 
-# groups = {}
-# types = {"semantic":   {},
-#             "detailed":   {},
-#             "structural": {}
-#         }
+    if not(q_type in type_list):
+        type_list.append(q_type)
 
-#                     # Obtain results for each group and type
-#             for question, correct_answer in zip(category_batch, correct_answers):
+print(f"len(group_list) {len(group_list) }")
+print(f"len(type_list) {len(type_list) }")
+print("-- group_list --")
+print(group_list)
+
+print("-- type_list --")
+print(type_list)
+            # # Obtain results for each group and type
+            # for question, correct_answer in zip(category_batch, correct_answers):
                 
-#                 group = question["group"] # e.g. -> all color questions
-#                 if group is not None:
-#                     group_rights, group_total = groups.get(group, (0, 0))
-#                     groups[group] = (group_rights + correct_answer, group_total + 1)
+            #     group = question["group"] # e.g. -> all color questions
+            #     if group is not None:
+            #         group_rights, group_total = groups.get(group, (0, 0))
+            #         groups[group] = (group_rights + correct_answer, group_total + 1)
+            #     else:
+            #         group_rights, group_total = groups.get("None", (0, 0))
+            #         groups["None"] = (group_rights + correct_answer, group_total + 1)
                 
-#                 for typ in question["types"]: # -> e.g. semantic
-#                     type_category = question["types"][typ] # -> e.g. query
-#                     if type_category is not None:
-#                         category_rights, category_total = types[typ].get(type_category, (0, 0))
-#                         types[typ][type_category] = (category_rights + correct_answer, category_total + 1)
-#             batch_number += 1
-#             #pbar.update() 
+            #     for typ in question["types"]: # -> e.g. semantic
+            #         type_category = question["types"][typ] # -> e.g. query
+            #         if type_category is not None:
+            #             category_rights, category_total = types[typ].get(type_category, (0, 0))
+            #             types[typ][type_category] = (category_rights + correct_answer, category_total + 1)
+            # batch_number += 1
 
 
-#         print(f"Accuracy seperated by group")
-#         for group in groups:
-#             rights, total = groups[group]
-#             print(f"Group: {group} -> {rights/total}% ")
-            
-#         print("___________________________________")
-            
-#         print(f"Accuracy seperated by types")
-#         for typ in types:
-#             print(f"Type: {typ}")
-#             current_type = types[typ]
-#             for category in current_type:
-#                 rights, total = current_type[group]
-#                 print(f"Category: {category} -> {rights/total}% ")
-#             print("___________________________________")
+
+
                 

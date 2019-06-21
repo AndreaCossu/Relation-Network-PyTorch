@@ -14,8 +14,10 @@ import numpy as np
 import win32api
 from functools import partial
 import time
+import csv
 
 DATASET_VALIDATION_SIZE = 0
+csv_path = "./results"
 
 def set_train_mode(module):
     module.train()
@@ -132,7 +134,7 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
     win32api.SetConsoleCtrlHandler(signalHandler, 1)
     avg_train_accuracies = []
     train_accuracies = []
-    avg_training_losses = []
+    avg_train_losses = []
     train_losses = []
 
     val_accuracies = []
@@ -246,10 +248,14 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
         batch = get_batch(dataset_questions_path, features_path, BATCH_SIZE, device, isObjectFeatures, categoryBatch=True)
 
         groups = {}
+        groups_acc = []
         types = {"semantic":   {},
                  "detailed":   {},
                  "structural": {}
                 }
+        semantic_acc = []
+        structural_acc = []
+        detailed_acc = []
         
         #pbar = tqdm(total=num_batch)
         batch_number = 0
@@ -317,15 +323,19 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
                     group_rights, group_total = groups.get("None", (0, 0))
                     groups["None"] = (group_rights + correct_answer, group_total + 1)
                 
-                for typ in question["types"]: # -> e.g. semantic
+                for typ in question["types"]: # -> e.g. semantic, detailed, structural
                     type_category = question["types"][typ] # -> e.g. query
                     if type_category is not None:
                         category_rights, category_total = types[typ].get(type_category, (0, 0))
                         types[typ][type_category] = (category_rights + correct_answer, category_total + 1)
+                    else:
+                        category_rights, category_total = types[typ].get("None", (0, 0))
+                        types[typ]["None"] = (category_rights + correct_answer, category_total + 1)
+                        
             
             batch_number += 1
             
-            if batch_number == 30:
+            if batch_number == 40:
                 break
             #pbar.update() 
 
@@ -333,7 +343,9 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
         print(f"Accuracy seperated by group")
         for group in groups:
             rights, total = groups[group]
+            groups_acc.append([group, 100*rights/total])
             print(f"Group: {group} -> {rights}/{total} gives us {100*rights/total}% ")
+        write_csv(groups_acc, "group_accuracy")
             
         print("___________________________________")
             
@@ -345,7 +357,24 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
                 rights, total = current_type[category]
                 print(f"Category: {category} -> {rights}/{total} gives us {100*rights/total}% ")
             print("___________________________________")
-                
+               
+        for category in types["semantic"]:
+            rights, total = types["semantic"][category]
+            semantic_acc.append([category, 100*rights/total])
+        write_csv(semantic_acc, "semantic_accuracy")
+        
+        for category in types["structural"]:
+            rights, total = types["structural"][category]
+            structural_acc.append([category, 100*rights/total])
+        write_csv(structural_acc, "structural_accuracy")
+        
+        for category in types["detailed"]:
+            rights, total = types["detailed"][category]
+            detailed_acc.append([category, 100*rights/total])
+        write_csv(detailed_acc, "detailed_accuracy")
+               
+         
+        
 
             
 
@@ -356,6 +385,12 @@ def test(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion,
 
         return val_loss, val_accuracy
 
+def write_csv(data, filename):
+    with open(csv_path + "/" + filename + ".csv", 'w', newline='') as writeFile:
+        header = ["Category", "Accuracy"]
+        writer = csv.writer(writeFile)
+        fileData = [header] + data
+        writer.writerows(fileData)
 
 def validation(dataset_questions_path, features_path, BATCH_SIZE, lstm, rn, criterion, questions_dictionary, answers_dictionary, device, MAX_QUESTION_LENGTH, isObjectFeatures, test_mode=True):
 

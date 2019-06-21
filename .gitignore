@@ -2,6 +2,7 @@ babi/
 CLEVR/
 saved_models/
 plots/
+results/
 
 __pycache__/
 .idea/
