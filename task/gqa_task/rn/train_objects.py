@@ -130,7 +130,7 @@ def signalHandler(sig, func=None):
 
 def train(train_questions_path, validation_questions_path, features_path, BATCH_SIZE, epochs,
           lstm, rn, criterion, optimizer, no_save, questions_dictionary, answers_dictionary, device,
-          MAX_QUESTION_LENGTH, isObjectFeatures, past_lists=[[],[],[],[]], print_every=1):
+          MAX_QUESTION_LENGTH, isObjectFeatures, print_every=1):
     global DATASET_VALIDATION_SIZE
     global lstm_model
     global rn_model
@@ -138,7 +138,10 @@ def train(train_questions_path, validation_questions_path, features_path, BATCH_
     lstm_model = lstm
     win32api.SetConsoleCtrlHandler(signalHandler, 1)
 
-    avg_train_accuracies, train_accuracies, avg_train_losses, train_losses = past_lists
+    avg_train_accuracies = []
+    train_accuracies = []
+    avg_train_losses = []
+    train_losses = []
 
     val_accuracies = []
     val_losses = [1000.]
