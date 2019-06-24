@@ -62,7 +62,7 @@ parser.add_argument('--load', type=bool, default=False,
 parser.add_argument('--no_save', type=bool, default=False,
                     help='disable model saving')
 parser.add_argument('--load_dictionary', type=bool,
-                    default=False, help='load dict from path')
+                    default=True, help='load dict from path')
 parser.add_argument('--dictionary_path', action="store_true",
                     help='load dict from path')
 parser.add_argument('--print_every', type=int, default=500,
