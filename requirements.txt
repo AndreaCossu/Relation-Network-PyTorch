@@ -1,4 +1,5 @@
 torch
+torchvision
 scikit-learn
 nltk
 matplotlib
@@ -6,3 +7,4 @@ tqdm
 pandas
 numpy
 silx
+skimage
