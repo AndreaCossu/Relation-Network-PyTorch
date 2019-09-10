@@ -1,7 +1,8 @@
-babi/
-CLEVR/
-saved_models/
-plots/
+babi/*
+CLEVR/*
+saved_models/*
+plots/*
+sort-of-clevr
 
 __pycache__/
 .idea/
@@ -17,3 +18,5 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+
+combinations.py
