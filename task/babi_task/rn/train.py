@@ -53,7 +53,6 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
 
             train_accuracies.append(correct)
             train_losses.append(loss.item())
-            break
 
         print("Epoch ", epoch, "/ ", epochs)
         avg_train_losses.append(sum(train_losses)/len(train_losses))
