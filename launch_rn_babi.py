@@ -113,11 +113,11 @@ criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 
 if args.epochs > 0:
     print("Start training")
-    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train_single(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save)
+    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train_single(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save, device)
     print("End training!")
 
 # print("Testing...")
-# avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion)
+# avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion, device)
 #
 # print("Test accuracy: ", avg_test_accuracy)
 # print("Test loss: ", avg_test_loss)

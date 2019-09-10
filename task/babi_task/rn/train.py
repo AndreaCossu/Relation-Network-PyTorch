@@ -6,7 +6,7 @@ from src.utils import  BabiDataset, batchify
 
 # TODO: use ordering (facts relative positional encoding).. not clear how
 
-def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save):
+def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save, device):
 
     train_babi_dataset = BabiDataset(train_stories)
     best_val = 1000.
@@ -28,6 +28,12 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
         for batch_id, (question_batch,answer_batch,facts_batch,_,ordering) in enumerate(train_dataset):
             if batch_id % 5000 == 0:
                 print("Batch within epoch: ", batch_id, "/", len(train_dataset))
+
+            question_batch,answer_batch,facts_batch,ordering = question_batch.to(device), \
+                                                            answer_batch.to(device), \
+                                                            facts_batch.to(device), \
+                                                            ordering.to(device)
+
 
             lstm.zero_grad()
             rn.zero_grad()
@@ -58,7 +64,7 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
         avg_train_losses.append(sum(train_losses)/len(train_losses))
         avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
 
-        val_loss, val_accuracy = test(validation_stories,lstm,rn,criterion)
+        val_loss, val_accuracy = test(validation_stories,lstm,rn,criterion, device)
         val_accuracies.append(val_accuracy)
         val_losses.append(val_loss)
 
@@ -76,7 +82,7 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
     return avg_train_losses, avg_train_accuracies, val_losses, val_accuracies
 
 
-def test(stories, lstm, rn, criterion):
+def test(stories, lstm, rn, criterion, device):
 
     with torch.no_grad():
 
@@ -93,6 +99,11 @@ def test(stories, lstm, rn, criterion):
         for batch_id, (question_batch,answer_batch,facts_batch,_,ordering) in enumerate(test_dataset):
             if batch_id % 1000 == 0:
                 print("Batch within test: ", batch_id, "/", len(test_dataset))
+
+            question_batch,answer_batch,facts_batch,ordering = question_batch.to(device), \
+                                                            answer_batch.to(device), \
+                                                            facts_batch.to(device), \
+                                                            ordering.to(device)
 
             lstm.zero_grad()
             rn.zero_grad()
