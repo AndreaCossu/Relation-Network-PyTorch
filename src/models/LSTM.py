@@ -18,30 +18,37 @@ class LSTM(nn.Module):
         self.lstm_f = nn.LSTM(dim_embedding, hidden_dim, num_layers=self.layers, batch_first = True)
 
     def process_query(self, x, h):
+        '''
+        :param x: (B, n_words_q)
+        '''
 
-        emb = self.embeddings(x) # B, L, D
+        emb = self.embeddings(x.unsqueeze(0)) # (B, n_words_q, dim_emb)
 
-        processed, h = self.lstm_q(emb, h) # B, L, H
+        processed, h = self.lstm_q(emb, h) # (B, n_words_q, hidden_dim_q)
 
         return processed, h
 
     def process_facts(self, x, h):
+        '''
+        :param x: (n_facts, n_words_facts)
+        '''
 
-        emb = self.embeddings(x) # B, n_facts, L, D
+        emb = self.embeddings(x) # (n_facts, n_words_facts, dim_emb)
 
-        processed, h = self.lstm_f(emb.view(-1,emb.size(2),emb.size(3)), h) # B*n_facts, L, H
+        processed, h = self.lstm_f(emb, h) # (n_facts, n_words_facts, hidden_dim_f)
 
-        return processed.view(x.size(0), x.size(1), x.size(2), -1), h
+        return processed, h
 
-    def reset_hidden_state(self, b):
-        # hidden is composed by hidden and cell state vectors
+    def reset_hidden_state_query(self):
         h_q = (
             torch.zeros(self.layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True),
             torch.zeros(self.layers, self.batch_size, self.hidden_dim, device=self.device, requires_grad=True)
             )
+        return h_q
 
+    def reset_hidden_state_fact(self, num_facts):
         h_f = (
-            torch.zeros(self.layers, b, self.hidden_dim, device=self.device, requires_grad=True),
-            torch.zeros(self.layers, b, self.hidden_dim, device=self.device, requires_grad=True)
+            torch.zeros(self.layers, num_facts, self.hidden_dim, device=self.device, requires_grad=True),
+            torch.zeros(self.layers, num_facts, self.hidden_dim, device=self.device, requires_grad=True)
             )
-        return h_q, h_f
+        return h_f

@@ -28,9 +28,13 @@ class RelationNetwork(nn.Module):
 
     def forward(self, x, q=None):
         '''
-        :param x: (batch, n_facts, length_fact)
-        :param q: (batch, length_q) query, optional.
+        :param x: (n_facts, hidden_dim_f)
+        :param q: (hidden_dim_q) query, optional.
         '''
+
+        x = x.unsqueeze(0)
+        if q is not None:
+            q = q.unsqueeze(0)
 
         n_facts = x.size(1)
 
@@ -40,15 +44,15 @@ class RelationNetwork(nn.Module):
         if q is not None:
             q = q.unsqueeze(1)
             q = q.repeat(1,xi.size(1),1)
-            pair_concat = torch.cat((xi,xj,q), dim=2)
+            pair_concat = torch.cat((xi,xj,q), dim=2) # (B, n_facts*n_facts, 2*hidden_dim_f+hidden_dim_q)
         else:
-            pair_concat = torch.cat((xi,xj), dim=2)
+            pair_concat = torch.cat((xi,xj), dim=2) # (B, n_facts*n_facts, 2*hidden_dim_f)
 
 
-        relations = self.g(pair_concat)
+        relations = self.g(pair_concat) # (B, n_facts*n_facts, hidden_dim_g)
 
-        embedding = torch.sum(relations, dim=1) # (output_dim_g)
+        embedding = torch.sum(relations, dim=1) # (B, hidden_dim_g)
 
-        out = self.f(embedding) # (output_dim_f)
+        out = self.f(embedding) # (B, hidden_dim_f)
 
         return out

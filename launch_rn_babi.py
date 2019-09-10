@@ -7,7 +7,7 @@ import os
 from itertools import chain
 from src.utils import files_names_test_en, files_names_train_en, files_names_test_en_valid, files_names_train_en_valid, files_names_val_en_valid
 from src.utils import saving_path_rn, names_models, load_models, split_train_validation
-from src.utils import load_dict, save_dict
+from src.utils import load_dict, save_dict, save_stories, load_stories
 from task.babi_task.rn.train import train_single, test
 
 parser = argparse.ArgumentParser()
@@ -20,11 +20,11 @@ parser.add_argument('--lstm_layers', type=int, default=1, help='layers of LSTM')
 
 parser.add_argument('--emb_dim', type=int, default=32, help='word embedding dimension')
 parser.add_argument('--only_relevant', action="store_true", help='read only relevant fact from babi dataset')
-parser.add_argument('--batch_size_stories', type=int, default=10, help='stories batch size')
+parser.add_argument('--batch_size_stories', type=int, default=1, help='KEEP IT TO 1')
 
 
 # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
-parser.add_argument('--babi_tasks', nargs='+', type=int, default=[1], help='which babi task to train and test. -1 to select all of them.')
+parser.add_argument('--babi_tasks', nargs='+', type=int, default=-1, help='which babi task to train and test. -1 to select all of them.')
 parser.add_argument('--en_valid', action="store_true", help='Use en-valid-10k instead of en-10k folder of babi')
 
 # optimizer parameters
@@ -51,46 +51,54 @@ device = torch.device(mode)
 
 cd = os.path.dirname(os.path.abspath(__file__))
 
-if args.babi_tasks == [-1]:
+if args.babi_tasks == -1: # 20 tasks are already dumped to file
     args.babi_tasks = list(range(1,21))
+    print('Loading babi')
+    dictionary = load_dict(args.en_valid)
 
-if args.en_valid:
-    path_babi_base = cd + "/babi/en-valid-10k/"
-    to_read_test = [files_names_test_en_valid[i-1] for i in args.babi_tasks]
-    to_read_val = [files_names_val_en_valid[i-1] for i in args.babi_tasks]
-    to_read_train = [files_names_train_en_valid[i-1] for i in args.babi_tasks]
-else:
-    path_babi_base = cd + "/babi/en-10k/"
-    to_read_test = [files_names_test_en[i-1] for i in args.babi_tasks]
-    to_read_train = [files_names_train_en[i-1] for i in args.babi_tasks]
+    train_stories = load_stories(args.en_valid, 'train')
+    validation_stories = load_stories(args.en_valid, 'valid')
+    test_stories = load_stories(args.en_valid, 'test')
 
-print("Reading babi")
+    print('Babi loaded')
 
+else: # single combinations have to be preprocessed from scratch
+    if args.en_valid:
+        path_babi_base = os.path.join(cd, "babi/en-valid-10k/")
+        to_read_test = [files_names_test_en_valid[i-1] for i in args.babi_tasks]
+        to_read_val = [files_names_val_en_valid[i-1] for i in args.babi_tasks]
+        to_read_train = [files_names_train_en_valid[i-1] for i in args.babi_tasks]
+    else:
+        path_babi_base = os.path.join(cd, "babi/en-10k/")
+        to_read_test = [files_names_test_en[i-1] for i in args.babi_tasks]
+        to_read_train = [files_names_train_en[i-1] for i in args.babi_tasks]
 
-
-if not args.en_valid: # When reading from en-10k and not from en-valid-10k
-    stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
-    train_stories, validation_stories = split_train_validation(stories, labels)
-    train_stories = vectorize_babi(train_stories, dictionary, args.batch_size_stories, device)
-    validation_stories = vectorize_babi(validation_stories, dictionary, args.batch_size_stories, device)
-else:
-    train_stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
-    train_stories = vectorize_babi(train_stories, dictionary, args.batch_size_stories, device)
-    validation_stories, _, _ = read_babi(path_babi_base, to_read_val, args.babi_tasks, only_relevant=args.only_relevant)
-    validation_stories = vectorize_babi(validation_stories, dictionary, args.batch_size_stories, device)
-
-test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks, only_relevant=args.only_relevant)
-test_stories = vectorize_babi(test_stories, dictionary, args.batch_size_stories, device)
+    print("Reading babi")
 
 
-if not args.load:
-    save_dict(dictionary)
-else:
-    dictionary = load_dict()
+
+    if not args.en_valid: # When reading from en-10k and not from en-valid-10k
+        stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
+        train_stories, validation_stories = split_train_validation(stories, labels)
+        train_stories = vectorize_babi(train_stories, dictionary, device)
+        validation_stories = vectorize_babi(validation_stories, dictionary, device)
+    else:
+        train_stories, dictionary, _ = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
+        train_stories = vectorize_babi(train_stories, dictionary, device)
+        validation_stories, _, _ = read_babi(path_babi_base, to_read_val, args.babi_tasks, only_relevant=args.only_relevant)
+        validation_stories = vectorize_babi(validation_stories, dictionary, device)
+    test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks, only_relevant=args.only_relevant)
+    test_stories = vectorize_babi(test_stories, dictionary, device)
+
+
+# save_dict(dictionary, args.en_valid)
+# save_stories(train_stories, args.en_valid, 'train')
+# save_stories(validation_stories, args.en_valid, 'valid')
+# save_stories(test_stories, args.en_valid, 'test')
+
 
 dict_size = len(dictionary)
-print("Dictionary size: ", dict_size)
-print("Done reading babi!")
+#print("Dictionary size: ", dict_size)
 
 lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_dim, args.lstm_layers, device).to(device)
 
@@ -108,11 +116,11 @@ if args.epochs > 0:
     avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train_single(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save)
     print("End training!")
 
-print("Testing...")
-avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion)
-
-print("Test accuracy: ", avg_test_accuracy)
-print("Test loss: ", avg_test_loss)
+# print("Testing...")
+# avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion)
+#
+# print("Test accuracy: ", avg_test_accuracy)
+# print("Test loss: ", avg_test_loss)
 
 if args.epochs > 0:
     import matplotlib
