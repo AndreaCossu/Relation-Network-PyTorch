@@ -1,4 +1,5 @@
 import torch
+import wandb
 from torch.utils.data import DataLoader
 from src.utils import save_models, saving_path_rn, get_answer, names_models
 from src.utils import  BabiDataset, batchify
@@ -78,6 +79,14 @@ def train_single(train_stories, validation_stories, epochs, lstm, rn, criterion,
         print()
         train_losses =  []
         train_accuracies = []
+
+        wandb.log({
+          'epoch': epoch, 
+          'train_loss': avg_train_losses[-1],
+          'train_accuracy': avg_train_accuracies[-1],
+          'val_loss': val_loss,
+          'val_accuracy': val_accuracy
+        })
 
     return avg_train_losses, avg_train_accuracies, val_losses, val_accuracies
 

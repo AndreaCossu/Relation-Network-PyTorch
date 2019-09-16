@@ -1,3 +1,4 @@
+import wandb
 from src.models.RN import RelationNetwork
 from src.nlp_utils import read_babi, vectorize_babi
 from src.models.LSTM import LSTM
@@ -9,6 +10,9 @@ from src.utils import files_names_test_en, files_names_train_en, files_names_tes
 from src.utils import saving_path_rn, names_models, load_models, split_train_validation
 from src.utils import load_dict, save_dict, save_stories, load_stories
 from task.babi_task.rn.train import train_single, test
+
+
+wandb.init(project="relation-network-babi")
 
 parser = argparse.ArgumentParser()
 parser.add_argument('--epochs', type=int, default=1, help='epochs to train.')
@@ -36,6 +40,8 @@ parser.add_argument('--load', action="store_true", help=' load saved model')
 parser.add_argument('--no_save', action="store_true", help='disable model saving')
 parser.add_argument('--print_every', type=int, default=500, help='print information every print_every steps')
 args = parser.parse_args()
+
+wandb.config = args
 
 mode = 'cpu'
 if args.cuda:
