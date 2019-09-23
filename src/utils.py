@@ -139,7 +139,7 @@ def random_idx_gen(start,end):
 
 
 
-def save_models(models, path):
+def save_models(models, path, wandb=None):
     '''
     :param models: iterable of (models to save, name)
     :param paths: saving path
@@ -147,8 +147,13 @@ def save_models(models, path):
     dict_m = {}
     for model, name in models:
         dict_m[name] = model.state_dict()
+        if wandb:
+            model.save(os.path.join(wandb.run.dir, name+".h5"))
 
     torch.save(dict_m, path)
+
+
+
 
 def load_models(models, path):
     '''
