@@ -149,7 +149,7 @@ def save_models(models, path, wandb_save=False):
     for model, name in models:
         dict_m[name] = model.state_dict()
         if wandb_save:
-            model.save(os.path.join(wandb.run.dir, name+".h5"))
+            model.save(os.path.join(wandb.run.dir, name+".pt"))
 
     torch.save(dict_m, path)
 
