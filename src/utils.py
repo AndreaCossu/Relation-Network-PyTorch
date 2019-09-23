@@ -4,6 +4,7 @@ from torch.nn.utils.rnn import pad_sequence
 import random
 import os
 import pickle
+import wandb
 from torch.utils.data import Dataset
 
 class BabiDataset(Dataset):
@@ -139,7 +140,7 @@ def random_idx_gen(start,end):
 
 
 
-def save_models(models, path, wandb=None):
+def save_models(models, path, wandb_save=False):
     '''
     :param models: iterable of (models to save, name)
     :param paths: saving path
@@ -147,7 +148,7 @@ def save_models(models, path, wandb=None):
     dict_m = {}
     for model, name in models:
         dict_m[name] = model.state_dict()
-        if wandb:
+        if wandb_save:
             model.save(os.path.join(wandb.run.dir, name+".h5"))
 
     torch.save(dict_m, path)
