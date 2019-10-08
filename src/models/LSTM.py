@@ -76,8 +76,7 @@ class LSTM_noemb(nn.Module):
         :param x: (B, n_words_q)
         '''
 
-        x = one_hot(x, self.num_classes) # (B, n_words_q, num_classes)
-        print(x.dtype)
+        x = one_hot(x, self.num_classes).float() # (B, n_words_q, num_classes)
         processed, h = self.lstm_q(x.unsqueeze(0), h) # (B, n_words_q, hidden_dim_q)
 
         return processed, h
@@ -87,7 +86,7 @@ class LSTM_noemb(nn.Module):
         :param x: (n_facts, n_words_facts)
         '''
 
-        x = one_hot(x, self.num_classes) # (B, n_words_q, num_classes)
+        x = one_hot(x, self.num_classes).float() # (B, n_words_q, num_classes)
         processed, h = self.lstm_f(x, h) # (n_facts, n_words_facts, hidden_dim_f)
 
         return processed, h
