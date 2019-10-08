@@ -107,7 +107,7 @@ dict_size = len(dictionary)
 #print("Dictionary size: ", dict_size)
 
 # lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_dim, args.lstm_layers, device).to(device)
-lstm = LSTM_noemb(args.hidden_dim_lstm, dict_size, args.batch_size_stories, dict_size, args.lstm_layers, device).to(device)
+lstm = LSTM_noemb(args.hidden_dim_lstm, dict_size, args.batch_size_stories, args.lstm_layers, device).to(device)
 
 rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.batch_size_stories, device).to(device)
 

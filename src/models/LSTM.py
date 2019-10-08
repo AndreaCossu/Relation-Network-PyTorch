@@ -58,7 +58,7 @@ class LSTM(nn.Module):
 
 class LSTM_noemb(nn.Module):
 
-    def __init__(self, hidden_dim, num_classes, batch_size, vocabulary_size, layers, device):
+    def __init__(self, hidden_dim, num_classes, batch_size, layers, device):
 
         super(LSTM_noemb, self).__init__()
 
@@ -68,8 +68,8 @@ class LSTM_noemb(nn.Module):
         self.layers = layers
         self.num_classes = num_classes
 
-        self.lstm_q = nn.LSTM(self.vocabulary_size, hidden_dim, num_layers=self.layers, batch_first = True)
-        self.lstm_f = nn.LSTM(self.vocabulary_size, hidden_dim, num_layers=self.layers, batch_first = True)
+        self.lstm_q = nn.LSTM(self.num_classes, hidden_dim, num_layers=self.layers, batch_first = True)
+        self.lstm_f = nn.LSTM(self.num_classes, hidden_dim, num_layers=self.layers, batch_first = True)
 
     def process_query(self, x, h):
         '''
