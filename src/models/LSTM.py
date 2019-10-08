@@ -77,6 +77,7 @@ class LSTM_noemb(nn.Module):
         '''
 
         x = one_hot(x, self.num_classes) # (B, n_words_q, num_classes)
+        print(x.dtype)
         processed, h = self.lstm_q(x.unsqueeze(0), h) # (B, n_words_q, hidden_dim_q)
 
         return processed, h
