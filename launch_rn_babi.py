@@ -9,7 +9,7 @@ from itertools import chain
 from src.utils import files_names_test_en, files_names_train_en, files_names_test_en_valid, files_names_train_en_valid, files_names_val_en_valid
 from src.utils import saving_path_rn, names_models, load_models, split_train_validation
 from src.utils import load_dict, save_dict, save_stories, load_stories
-from task.babi_task.rn.train import train_single, test
+from task.babi_task.rn.train import train, test, test_separately
 
 
 wandb.init(project="relation-network-babi")
@@ -35,6 +35,7 @@ parser.add_argument('--en_valid', action="store_true", help='Use en-valid-10k in
 parser.add_argument('--weight_decay', type=float, default=0, help='optimizer hyperparameter')
 parser.add_argument('--learning_rate', type=float, default=2e-4, help='optimizer hyperparameter')
 
+parser.add_argument('--test_jointly', action="store_true", help='final test on all tasks')
 parser.add_argument('--wandb_save', action="store_true", help='save models on W&B')
 parser.add_argument('--cuda', action="store_true", help='use gpu')
 parser.add_argument('--load', action="store_true", help=' load saved model')
@@ -120,14 +121,22 @@ criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 
 if args.epochs > 0:
     print("Start training")
-    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train_single(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save, device, args.wandb_save)
+    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save, device, args.wandb_save)
     print("End training!")
 
-# print("Testing...")
-# avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion, device)
-#
-# print("Test accuracy: ", avg_test_accuracy)
-# print("Test loss: ", avg_test_loss)
+if args.test_jointly:
+    print("Testing jointly...")
+    # avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion, device)
+
+    # print("Test accuracy: ", avg_test_accuracy)
+    # print("Test loss: ", avg_test_loss)
+else:
+    print("Testing separately...")
+    # avg_test_losses, avg_test_accuracies = test_separately(test_stories, lstm, rn, criterion, device)
+
+    # print("Test accuracy: ", avg_test_accuracies)
+    # print("Test loss: ", avg_test_losses)
+
 
 if args.epochs > 0:
     import matplotlib
