@@ -6,8 +6,6 @@ from src.utils import  BabiDataset, batchify
 from collections import defaultdict
 
 
-# TODO: use ordering (facts relative positional encoding).. not clear how
-
 def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save, device, wandb_save=False):
 
     train_babi_dataset = BabiDataset(train_stories)
@@ -35,6 +33,7 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
                                                             answer_batch.to(device), \
                                                             facts_batch.to(device), \
                                                             ordering.to(device)
+
 
 
             lstm.zero_grad()

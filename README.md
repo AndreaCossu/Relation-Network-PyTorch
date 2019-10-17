@@ -3,7 +3,7 @@ Implementation of Relation Network. Original paper: https://arxiv.org/abs/1706.0
 
 Implementation of Recurrent Relational Network. Original paper: https://arxiv.org/abs/1711.08028
 
-This repository uses PyTorch v1.0 (Python3).
+This repository uses PyTorch v1.3 (Python3.7).
 
 ## WORK IN PROGRESS
 
@@ -33,3 +33,8 @@ This implementation tests the Relation Network model (RN) and the Recurrent Rela
 
 # Requirements
 Run `pip install -r requirements.txt`
+
+
+# TODO?
+https://datascience.stackexchange.com/questions/51065/what-is-the-positional-encoding-in-the-transformer-model
+add positional encoding by using transformer-like approach

@@ -18,8 +18,8 @@ parser = argparse.ArgumentParser()
 parser.add_argument('--epochs', type=int, default=1, help='epochs to train.')
 parser.add_argument('--hidden_dims_g', nargs='+', type=int, default=[256, 256, 256], help='layers of relation function g')
 parser.add_argument('--output_dim_g', type=int, default=256, help='output dimension of relation function g')
-parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 512], help='layers of final network f')
-parser.add_argument('--hidden_dim_lstm', type=int, default=32, help='units of LSTM')
+parser.add_argument('--hidden_dims_f', nargs='+', type=int, default=[256, 256], help='layers of final network f')
+parser.add_argument('--hidden_dim_lstm', type=int, default=128, help='units of LSTM')
 parser.add_argument('--lstm_layers', type=int, default=1, help='layers of LSTM')
 
 parser.add_argument('--emb_dim', type=int, default=32, help='word embedding dimension')
@@ -107,8 +107,8 @@ else: # single combinations have to be preprocessed from scratch
 dict_size = len(dictionary)
 #print("Dictionary size: ", dict_size)
 
-# lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_dim, args.lstm_layers, device).to(device)
-lstm = LSTM_noemb(args.hidden_dim_lstm, dict_size, args.batch_size_stories, args.lstm_layers, device).to(device)
+lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_dim, args.lstm_layers, device).to(device)
+# lstm = LSTM_noemb(args.hidden_dim_lstm, dict_size, args.batch_size_stories, args.lstm_layers, device).to(device)
 
 rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.batch_size_stories, device).to(device)
 
