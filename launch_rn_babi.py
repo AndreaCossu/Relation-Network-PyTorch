@@ -107,7 +107,7 @@ else: # single combinations have to be preprocessed from scratch
 def init_weights(m):
     # if m.dim() > 1:
     if type(m) == torch.nn.Linear:
-        torch.nn.init.xavier_uniform(m.weight)
+        torch.nn.init.xavier_uniform_(m.weight)
 
 
 dict_size = len(dictionary)
