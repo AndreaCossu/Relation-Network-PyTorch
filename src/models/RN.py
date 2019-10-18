@@ -23,7 +23,7 @@ class RelationNetwork(nn.Module):
         self.device = device
 
         self.g = MLP(self.input_dim_g, self.hidden_dims_g, self.output_dim_g, nonlinear=True)
-        self.f = MLP(self.input_dim_f, self.hidden_dims_f, self.output_dim_f, dropout=True)
+        self.f = MLP(self.input_dim_f, self.hidden_dims_f, self.output_dim_f)
 
 
     def forward(self, x, q=None):
