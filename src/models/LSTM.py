@@ -27,7 +27,7 @@ class LSTM(nn.Module):
         '''
 
         emb = self.embeddings(x.unsqueeze(0)) # (B, n_words_q, dim_emb)
-        if self.use_droput:
+        if self.use_dropout:
             emb = self.dropout(emb)
 
         processed, h = self.lstm_q(emb, h) # (B, n_words_q, hidden_dim_q)
