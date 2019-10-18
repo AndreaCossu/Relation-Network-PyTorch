@@ -104,13 +104,21 @@ else: # single combinations have to be preprocessed from scratch
 # save_stories(test_stories, args.en_valid, 'test')
 
 
+def init_weights(m):
+    # if m.dim() > 1:
+    if type(m) == torch.nn.Linear:
+        torch.nn.init.xavier_uniform(m.weight)
+
+
 dict_size = len(dictionary)
 #print("Dictionary size: ", dict_size)
 
-lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_dim, args.lstm_layers, device).to(device)
+lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_dim, args.lstm_layers, device, dropout=True).to(device)
 # lstm = LSTM_noemb(args.hidden_dim_lstm, dict_size, args.batch_size_stories, args.lstm_layers, device).to(device)
+lstm.apply(init_weights)
 
 rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.batch_size_stories, device).to(device)
+rn.apply(init_weights)
 
 if args.load:
     load_models([(lstm, names_models[0]), (rn, names_models[1])], saving_path_rn)
