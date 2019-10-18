@@ -17,7 +17,7 @@ class MLP(nn.Module):
 
         self.linears = nn.ModuleList([nn.Linear(self.input_dim, self.hidden_dims[0])])
         if self.use_droput:
-            self.dropouts = nn.ModuleList( [nn.Dropout(p=0.5) for _ in range(self.hidden_dims-1)] )
+            self.dropouts = nn.ModuleList( [nn.Dropout(p=0.5) for _ in range(len(self.hidden_dims)-1)] )
 
         for i in range(1,len(self.hidden_dims)):
             self.linears.append(nn.Linear(self.hidden_dims[i-1], self.hidden_dims[i]))
