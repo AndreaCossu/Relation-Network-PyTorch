@@ -46,7 +46,6 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
             question_emb = question_emb[0,-1]
 
             facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
-            facts_emb = facts_emb[:,-1]
 
             rr = rn(facts_emb, question_emb)
 
@@ -124,7 +123,6 @@ def test(stories, lstm, rn, criterion, device):
             question_emb = question_emb[0,-1]
 
             facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
-            facts_emb = facts_emb[:,-1]
 
             rr = rn(facts_emb, question_emb)
 
@@ -177,7 +175,6 @@ def test_separately(stories, lstm, rn, criterion, device):
             question_emb = question_emb[0,-1]
 
             facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
-            facts_emb = facts_emb[:,-1]
 
             rr = rn(facts_emb, question_emb)
 

@@ -43,7 +43,11 @@ class LSTM(nn.Module):
         if self.use_dropout:
             emb = self.dropout(emb)
 
-        processed, h = self.lstm_f(emb, h) # (n_facts, n_words_facts, hidden_dim_f)
+        _, h = self.lstm_f(emb, h) # (n_facts, n_words_facts, hidden_dim_f)
+
+        oneofk = torch.eye(20)[:x.size(0)].to(self.device)
+
+        processed = torch.cat( (h[0].squeeze(0), oneofk), dim=1) # add positional encoding in one-of-k (max 20 facts)
 
         return processed, h
 
