@@ -52,10 +52,12 @@ class RelationNetwork(nn.Module):
 
         pair_concat = pair_concat.squeeze(0) # remove batch=1
 
-        relations = self.g(pair_concat) # (B, n_facts*n_facts, hidden_dim_g)
+        relations = self.g(pair_concat) # (n_facts*n_facts, hidden_dim_g)
 
-        embedding = torch.sum(relations, dim=1) # (B, hidden_dim_g)
+        embedding = torch.sum(relations, dim=0) # (hidden_dim_g)
 
-        out = self.f(embedding) # (B, hidden_dim_f)
+        out = self.f(embedding) # (hidden_dim_f)
 
+        out = out.unsqueeze(0)
+        
         return out
