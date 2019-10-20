@@ -27,6 +27,7 @@ parser.add_argument('--only_relevant', action="store_true", help='read only rele
 parser.add_argument('--batch_size_stories', type=int, default=1, help='KEEP IT TO 1')
 
 parser.add_argument('--dropout', action="store_true", help='enable dropout')
+parser.add_argument('--relu_act', action="store_true", help='use relu activation for MLP instead of tanh')
 
 
 # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
@@ -120,7 +121,7 @@ lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_d
 # lstm = LSTM_noemb(args.hidden_dim_lstm, dict_size, args.batch_size_stories, args.lstm_layers, device).to(device)
 lstm.apply(init_weights)
 
-rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.dropout, args.batch_size_stories, device).to(device)
+rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.dropout, args.relu_act, args.batch_size_stories, device).to(device)
 rn.apply(init_weights)
 
 if args.load:

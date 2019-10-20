@@ -4,7 +4,7 @@ from src.models.MLP import MLP
 
 class RelationNetwork(nn.Module):
 
-    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, dropout, batch_size, device):
+    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, dropout, relu, batch_size, device):
         '''
         :param object_dim: Equal to LSTM hidden dim. Dimension of the single object to be taken into consideration from g.
         '''
@@ -22,8 +22,8 @@ class RelationNetwork(nn.Module):
         self.batch_size = batch_size
         self.device = device
 
-        self.g = MLP(self.input_dim_g, self.hidden_dims_g, self.output_dim_g, nonlinear=True, dropout=dropout)
-        self.f = MLP(self.input_dim_f, self.hidden_dims_f, self.output_dim_f, dropout=dropout)
+        self.g = MLP(self.input_dim_g, self.hidden_dims_g, self.output_dim_g, relu=relu, nonlinear=True, dropout=dropout)
+        self.f = MLP(self.input_dim_f, self.hidden_dims_f, self.output_dim_f, relu=relu, dropout=dropout)
 
 
     def forward(self, x, q=None):
