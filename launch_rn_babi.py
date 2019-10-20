@@ -122,7 +122,7 @@ lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_d
 # lstm = LSTM_noemb(args.hidden_dim_lstm, dict_size, args.batch_size_stories, args.lstm_layers, device).to(device)
 lstm.apply(init_weights)
 
-rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.dropout, args.relu_act, args.batch_size_stories, device).to(device)
+rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.dropout, args.relu_act, args.batch_size_stories, args.wave_penc, device).to(device)
 rn.apply(init_weights)
 
 if args.load:

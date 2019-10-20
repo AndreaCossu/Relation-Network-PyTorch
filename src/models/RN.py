@@ -4,14 +4,18 @@ from src.models.MLP import MLP
 
 class RelationNetwork(nn.Module):
 
-    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, dropout, relu, batch_size, device):
+    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, dropout, relu, batch_size, wave_penc, device):
         '''
         :param object_dim: Equal to LSTM hidden dim. Dimension of the single object to be taken into consideration from g.
         '''
 
         super(RelationNetwork, self).__init__()
 
-        self.object_dim = object_dim + 20 # 20 is the length of the one-of-k positional encoding of max 20 facts
+        if not wave_penc:
+            self.object_dim = object_dim + 20 # 20 is the length of the one-of-k positional encoding of max 20 facts
+        else:
+            self.object_dim = object_dim
+            
         self.query_dim = object_dim
         self.input_dim_g = 2 * self.object_dim + self.query_dim # g analyzes pairs of objects
         self.hidden_dims_g = hidden_dims_g
@@ -59,5 +63,5 @@ class RelationNetwork(nn.Module):
         out = self.f(embedding) # (hidden_dim_f)
 
         out = out.unsqueeze(0)
-        
+
         return out
