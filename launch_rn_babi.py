@@ -43,6 +43,7 @@ parser.add_argument('--no_save', action="store_true", help='disable model saving
 parser.add_argument('--print_every', type=int, default=500, help='print information every print_every steps')
 args = parser.parse_args()
 
+wandb.config.update(args)
 
 mode = 'cpu'
 if args.cuda:
