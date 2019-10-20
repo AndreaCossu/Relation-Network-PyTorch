@@ -2,9 +2,11 @@ import torch.nn as nn
 import torch
 from torch.nn.functional import one_hot
 
+
+
 class LSTM(nn.Module):
 
-    def __init__(self, hidden_dim, batch_size, vocabulary_size, dim_embedding, layers, device, dropout=False):
+    def __init__(self, hidden_dim, batch_size, vocabulary_size, dim_embedding, layers, device, dropout=False, wave_penc=False):
 
         super(LSTM, self).__init__()
 
@@ -13,6 +15,7 @@ class LSTM(nn.Module):
         self.hidden_dim = hidden_dim
         self.layers = layers
         self.use_dropout = dropout
+        self.wave_penc = wave_penc
 
         self.embeddings = nn.Embedding(vocabulary_size, dim_embedding).to(self.device)
         if self.use_dropout:
@@ -45,11 +48,29 @@ class LSTM(nn.Module):
 
         _, h = self.lstm_f(emb, h) # (n_facts, n_words_facts, hidden_dim_f)
 
-        oneofk = torch.eye(20)[:x.size(0)].to(self.device)
-
-        processed = torch.cat( (h[0].squeeze(0), oneofk), dim=1) # add positional encoding in one-of-k (max 20 facts)
+        if not self.wave_penc:
+            oneofk = torch.eye(20)[:x.size(0)].to(self.device)
+            processed = torch.cat( (h[0].squeeze(0), oneofk), dim=1) # add positional encoding in one-of-k (max 20 facts)
+        else:
+            processed = h[0].squeeze(0) + self.wave_positional_encoding(x.size(0)).unsqueeze(1)
 
         return processed, h
+
+
+    def wave_positional_encoding(self, size):
+        '''
+        Use positional encoding like in Transformer paper - Attention is all you need
+        '''
+
+        waves_penc = torch.empty(size).float()
+
+        for i in range(waves_penc.size(-1)):
+            if i % 2 == 0:
+                waves_penc[i] = torch.sin(torch.tensor(i / 10000.**( float((2*i)) / float(self.hidden_dim))))
+            else:
+                waves_penc[i] = torch.cos(torch.tensor(i / 10000.**( float((2*i)) / float(self.hidden_dim))))
+
+        return waves_penc.to(self.device)
 
     def reset_hidden_state_query(self):
         h_q = (

@@ -33,8 +33,3 @@ This implementation tests the Relation Network model (RN) and the Recurrent Rela
 
 # Requirements
 Run `pip install -r requirements.txt`
-
-
-# TODO?
-https://datascience.stackexchange.com/questions/51065/what-is-the-positional-encoding-in-the-transformer-model
-add positional encoding by using transformer-like approach

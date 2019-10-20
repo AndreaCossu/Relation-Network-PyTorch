@@ -28,6 +28,7 @@ parser.add_argument('--batch_size_stories', type=int, default=1, help='KEEP IT T
 
 parser.add_argument('--dropout', action="store_true", help='enable dropout')
 parser.add_argument('--relu_act', action="store_true", help='use relu activation for MLP instead of tanh')
+parser.add_argument('--wave_penc', action="store_true", help='use sin/cos positional encoding instead of one-of-k')
 
 
 # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
@@ -117,7 +118,7 @@ def init_weights(m):
 dict_size = len(dictionary)
 #print("Dictionary size: ", dict_size)
 
-lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_dim, args.lstm_layers, device, dropout=args.dropout).to(device)
+lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_dim, args.lstm_layers, device, wave_penc=args.wave_penc, dropout=args.dropout).to(device)
 # lstm = LSTM_noemb(args.hidden_dim_lstm, dict_size, args.batch_size_stories, args.lstm_layers, device).to(device)
 lstm.apply(init_weights)
 
