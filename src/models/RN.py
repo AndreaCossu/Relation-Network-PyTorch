@@ -12,7 +12,7 @@ class RelationNetwork(nn.Module):
         super(RelationNetwork, self).__init__()
 
         self.object_dim = object_dim + 20 # 20 is the length of the one-of-k positional encoding of max 20 facts
-        self.query_dim = self.object_dim
+        self.query_dim = object_dim
         self.input_dim_g = 2 * self.object_dim + self.query_dim # g analyzes pairs of objects
         self.hidden_dims_g = hidden_dims_g
         self.output_dim_g = output_dim_g
