@@ -24,7 +24,7 @@ parser.add_argument('--lstm_layers', type=int, default=1, help='layers of LSTM')
 
 parser.add_argument('--emb_dim', type=int, default=32, help='word embedding dimension')
 parser.add_argument('--only_relevant', action="store_true", help='read only relevant fact from babi dataset')
-parser.add_argument('--batch_size_stories', type=int, default=1, help='KEEP IT TO 1')
+parser.add_argument('--batch_size_stories', type=int, default=1, help='batch size')
 
 parser.add_argument('--dropout', action="store_true", help='enable dropout')
 parser.add_argument('--relu_act', action="store_true", help='use relu activation for MLP instead of tanh')
