@@ -18,7 +18,7 @@ class LSTM(nn.Module):
         self.use_dropout = dropout
         self.wave_penc = wave_penc
 
-        self.embeddings = nn.Embedding(vocabulary_size, dim_embedding).to(self.device)
+        self.embeddings = nn.Embedding(vocabulary_size+1, dim_embedding).to(self.device)
         if self.use_dropout:
             self.dropout = nn.Dropout(p=0.5)
 
