@@ -48,8 +48,8 @@ class RelationNetwork(nn.Module):
         else:
             pair_concat = torch.cat((xi,xj), dim=2) # (B, n_facts*n_facts, 2*hidden_dim_f)
 
-
-        relations = self.g(pair_concat) # (n_facts*n_facts, hidden_dim_g)
+        relations = self.g(pair_concat.view(-1, pair_concat.size(2))) # (n_facts*n_facts, hidden_dim_g)
+        relations = relations.view(pair_concat.size(0), pair_concat.size(1), relations.size(2))
 
         embedding = torch.sum(relations, dim=0) # (hidden_dim_g)
 
