@@ -128,11 +128,11 @@ def get_run_folder(dest):
     return target
 
 def write_test(folder, losses, accs):
-    with open(os.path.join(folder, 'test_accs.csv', 'w')) as f:
+    with open(os.path.join(folder, 'test_accs.csv'), 'w') as f:
         w = csv.writer(f)
         for key, val in accs.items():
             w.writerow([key, val])
-    with open(os.path.join(folder, 'test_losses.csv', 'w')) as f:
+    with open(os.path.join(folder, 'test_losses.csv'), 'w') as f:
         w = csv.writer(f)
         for key, val in losses.items():
             w.writerow([key, val])
