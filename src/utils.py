@@ -120,13 +120,12 @@ def get_run_folder(dest):
     if not os.path.isdir(target):
         try:
             os.makedirs(target)
-            folder = target
 
         except OSError:
             print("Error when creating experiment folder")
-            folder = default
+            target = default
 
-    return folder
+    return target
 
 def write_test(folder, losses, accs):
     with open(os.path.join(folder, 'test_accs.csv', 'w')) as f:
