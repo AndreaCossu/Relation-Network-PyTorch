@@ -62,7 +62,7 @@ class LSTM(nn.Module):
         return final, h
 
 
-    def wave_positional_encoding(self, batch, facts, h):
+    def wave_positional_encoding(self, batch, facts):
         '''
         Use positional encoding like in Transformer paper - Attention is all you need
         '''
