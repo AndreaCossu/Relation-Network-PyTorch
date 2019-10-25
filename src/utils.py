@@ -73,7 +73,7 @@ def batchify(data_batch):
     #lengths_q = torch.tensor([el.size(0) for el in q_s]).long() # number of words
 
     rows, columns = max([ el.size(0) for el in f_s] ), max([ el.size(1) for el in f_s] )
-    ff = torch.ones(len(f_s), rows, columns)*157 # len(dictionary) as pad value
+    ff = torch.ones(len(f_s), rows, columns, dtype=torch.long)*157 # len(dictionary) as pad value
     for i, t in enumerate(f_s):
         r, c = t.size(0), t.size(1)
         ff[i, :r, :c] = t
@@ -146,7 +146,7 @@ def write_test(folder, losses, accs):
         w = csv.writer(f)
         for key, val in losses.items():
             w.writerow([key, val])
-            
+
 
 def get_answer(output, target, vocabulary=None):
     '''
