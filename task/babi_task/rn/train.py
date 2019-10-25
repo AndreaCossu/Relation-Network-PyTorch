@@ -20,7 +20,7 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
         train_accuracies = []
         train_losses = []
 
-        train_dataset = DataLoader(train_babi_dataset, batch_size=batch_size, shuffle=False, collate_fn=batchify)
+        train_dataset = DataLoader(train_babi_dataset, batch_size=batch_size, shuffle=True, collate_fn=batchify, drop_last=True)
 
         rn.train()
         lstm.train()
@@ -98,7 +98,7 @@ def test(stories, lstm, rn, criterion, device, batch_size):
         lstm.eval()
 
         test_babi_dataset = BabiDataset(stories)
-        test_dataset = DataLoader(test_babi_dataset, batch_size=batch_size, shuffle=False, collate_fn=batchify)
+        test_dataset = DataLoader(test_babi_dataset, batch_size=batch_size, shuffle=False, collate_fn=batchify, drop_last=True)
 
 
         for batch_id, (question_batch,answer_batch,facts_batch,_,_) in enumerate(test_dataset):
