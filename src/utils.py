@@ -78,7 +78,7 @@ def batchify(data_batch):
         r, c = t.size(0), t.size(1)
         ff[i, :r, :c] = t
 
-    return ( pad_sequence(q_s, batch_first=True, padding_value=157), torch.stack(a_s, dim=0), ff.view(-1, ff.size(2)), torch.stack(l_s, dim=0), o_s, len(f_s))
+    return ( pad_sequence(q_s, batch_first=True, padding_value=157), torch.stack(a_s, dim=0), ff.view(-1, ff.size(2)), torch.stack(l_s, dim=0), o_s)
 
 def save_stories(stories, valid, name):
     if valid:

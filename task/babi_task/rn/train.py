@@ -25,7 +25,7 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
         rn.train()
         lstm.train()
 
-        for batch_id, (question_batch,answer_batch,facts_batch,_,_, num_facts) in enumerate(train_dataset):
+        for batch_id, (question_batch,answer_batch,facts_batch,_,_) in enumerate(train_dataset):
             if (batch_id+1) % 5000 == 0:
                 print("Batch ", batch_id, "/", len(train_dataset), " - epoch ", epoch, ".")
 
@@ -39,11 +39,11 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
             rn.zero_grad()
 
             h_q = lstm.reset_hidden_state_query()
-            h_f = lstm.reset_hidden_state_fact(facts_batch.size(0))
+            h_f = lstm.reset_hidden_state_fact(batch_size*facts_batch.size(1))
 
             question_emb, h_q = lstm.process_query(question_batch, h_q)
 
-            facts_emb, h_f = lstm.process_facts(facts_batch, h_f, num_facts)
+            facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
 
             rr = rn(facts_emb, question_emb)
 
@@ -101,7 +101,7 @@ def test(stories, lstm, rn, criterion, device, batch_size):
         test_dataset = DataLoader(test_babi_dataset, batch_size=batch_size, shuffle=False, collate_fn=batchify)
 
 
-        for batch_id, (question_batch,answer_batch,facts_batch,_,_, num_facts) in enumerate(test_dataset):
+        for batch_id, (question_batch,answer_batch,facts_batch,_,_) in enumerate(test_dataset):
             if (batch_id+1) % 1000 == 0:
                 print("Test batch: ", batch_id, "/", len(test_dataset))
 
@@ -113,11 +113,11 @@ def test(stories, lstm, rn, criterion, device, batch_size):
             rn.zero_grad()
 
             h_q = lstm.reset_hidden_state_query()
-            h_f = lstm.reset_hidden_state_fact(facts_batch.size(0))
+            h_f = lstm.reset_hidden_state_fact(batch_size*facts_batch.size(1))
 
             question_emb, h_q = lstm.process_query(question_batch, h_q)
 
-            facts_emb, h_f = lstm.process_facts(facts_batch, h_f, num_facts)
+            facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
 
             rr = rn(facts_emb, question_emb)
 

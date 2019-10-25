@@ -146,7 +146,7 @@ if not args.test_on_test:
 
 if args.test_jointly:
     print("Testing jointly...")
-    avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion, device)
+    avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion, device, args.batch_size)
 
     print("Test accuracy: ", avg_test_accuracy)
     print("Test loss: ", avg_test_loss)

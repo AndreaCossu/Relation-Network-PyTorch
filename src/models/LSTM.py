@@ -40,7 +40,7 @@ class LSTM(nn.Module):
 
         return h[0].squeeze(), h
 
-    def process_facts(self, x, h, num_facts):
+    def process_facts(self, x, h):
         '''
         :param x: (n_facts, n_words_facts)
         '''
@@ -51,10 +51,10 @@ class LSTM(nn.Module):
 
         _, h = self.lstm_f(emb, h) # (n_facts, n_words_facts, hidden_dim_f)
 
-        processed = h[0].squeeze().view(num_facts,-1,self.hidden_dim)
+        processed = h[0].squeeze().view(self.batch_size,-1,self.hidden_dim)
 
         if not self.wave_penc:
-            oneofk = torch.eye(20)[:processed.size(1)].repeat(processed.size(0),1,1).to(self.device)
+            oneofk = torch.eye(20)[:processed.size(1)].repeat(self.batch_size,1,1).to(self.device)
             final = torch.cat( (processed, oneofk), dim=0) # add positional encoding in one-of-k (max 20 facts)
         else:
             final = processed + self.wave_positional_encoding(processed.size(0), processed.size(1))
