@@ -127,6 +127,9 @@ lstm.apply(init_weights)
 rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.dropout, args.relu_act, args.batch_size_stories, args.wave_penc, device).to(device)
 rn.apply(init_weights)
 
+wandb.watch(rn)
+wandb.watch(lstm)
+
 if args.load:
     load_models([(lstm, names_models[0]), (rn, names_models[1])], result_folder, saving_path_rn)
 
