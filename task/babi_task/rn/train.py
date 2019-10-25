@@ -2,7 +2,7 @@ import torch
 import wandb
 from torch.utils.data import DataLoader
 from src.utils import save_models, saving_path_rn, get_answer, names_models
-from src.utils import  BabiDataset, batchify
+from src.utils import  BabiDataset, batchify, get_answer_separately
 from collections import defaultdict
 
 
@@ -132,7 +132,7 @@ def test(stories, lstm, rn, criterion, device, batch_size):
         return test_loss / float(len(test_dataset)), test_accuracy / float(len(test_dataset))
 
 
-def test_separately(stories, lstm, rn, criterion, device):
+def test_separately(stories, lstm, rn, criterion, device, batch_size):
     '''
     Supported only with batch_size = 1 because it tests separately each babi task.
     To use it with batch_size > 1 accounts for different task accuracies in each batch.
@@ -140,14 +140,13 @@ def test_separately(stories, lstm, rn, criterion, device):
 
     with torch.no_grad():
 
-        losses = defaultdict(list)
         accuracies = defaultdict(list)
 
         rn.eval()
         lstm.eval()
 
         test_babi_dataset = BabiDataset(stories)
-        test_dataset = DataLoader(test_babi_dataset, batch_size=1, shuffle=False, collate_fn=batchify)
+        test_dataset = DataLoader(test_babi_dataset, batch_size=batch_size, shuffle=False, collate_fn=batchify, drop_last=True)
 
 
         for batch_id, (question_batch,answer_batch,facts_batch,task_label,_) in enumerate(test_dataset):
@@ -157,7 +156,7 @@ def test_separately(stories, lstm, rn, criterion, device):
             question_batch,answer_batch,facts_batch, task_label, _,_ = question_batch.to(device), \
                                                             answer_batch.to(device), \
                                                             facts_batch.to(device), \
-                                                            task_label.item(), \
+                                                            task_label.tolist(), \
 
             lstm.zero_grad()
             rn.zero_grad()
@@ -166,22 +165,18 @@ def test_separately(stories, lstm, rn, criterion, device):
             h_f = lstm.reset_hidden_state_fact(facts_batch.size(0))
 
             question_emb, h_q = lstm.process_query(question_batch, h_q)
-            question_emb = question_emb[0,-1]
 
             facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
 
             rr = rn(facts_emb, question_emb)
 
-            loss = criterion(rr, answer_batch.unsqueeze(0))
+            corrects = get_answer_separately(rr, answer_batch)
 
-
-            correct, _ = get_answer(rr, answer_batch)
-
-            accuracies[task_label].append(correct)
-            losses[task_label].append(loss.item())
+            for el, correct in zip(task_label, corrects):
+                if correct:
+                    accuracies[el].append(1.)
 
         f = lambda x: sum(x) / float(len(x)) # get mean over each list values of dictionary
-        avg_test_loss = {k: f(v) for k,v in losses.items()}
         avg_test_acc = {k: f(v) for k,v in accuracies.items()}
 
-        return avg_test_loss, avg_test_acc
+        return avg_test_acc

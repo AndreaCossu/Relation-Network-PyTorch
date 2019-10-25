@@ -152,12 +152,11 @@ if args.test_jointly:
     print("Test loss: ", avg_test_loss)
 else:
     print("Testing separately...")
-    avg_test_losses, avg_test_accuracies = test_separately(test_stories, lstm, rn, criterion, device)
-
+    avg_test_accuracies = test_separately(test_stories, lstm, rn, criterion, device, args.batch_size)
+    avg_test_loss = None
     print("Test accuracy: ", avg_test_accuracies)
-    print("Test loss: ", avg_test_losses)
 
-write_test(result_folder, avg_test_losses, avg_test_accuracies)
+write_test(result_folder, losses=avg_test_loss, accs=avg_test_accuracies)
 
 if args.epochs > 0:
     plot_results(result_folder, avg_train_losses, val_losses, avg_train_accuracies, val_accuracies)

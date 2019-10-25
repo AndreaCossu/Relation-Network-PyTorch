@@ -137,16 +137,32 @@ def get_run_folder(dest):
 
     return target
 
-def write_test(folder, losses, accs):
-    with open(os.path.join(folder, 'test_accs.csv'), 'w') as f:
-        w = csv.writer(f)
-        for key, val in accs.items():
-            w.writerow([key, val])
-    with open(os.path.join(folder, 'test_losses.csv'), 'w') as f:
-        w = csv.writer(f)
-        for key, val in losses.items():
-            w.writerow([key, val])
+def write_test(folder, losses=None, accs=None):
+    if accs is not None:
+        with open(os.path.join(folder, 'test_accs.csv'), 'w') as f:
+            w = csv.writer(f)
+            for key, val in accs.items():
+                w.writerow([key, val])
 
+    if losses is not None:
+        with open(os.path.join(folder, 'test_losses.csv'), 'w') as f:
+            w = csv.writer(f)
+            for key, val in losses.items():
+                w.writerow([key, val])
+
+
+def get_answer_separately(output, target, vocabulary=None):
+    '''
+    :param output: tensor representing output of the model
+    :param vocabulary: vocabulary of all the words
+
+    :return correct: average accuracy
+    :return answer: if vocabulary is not None, the string representation of the outputs, else None
+    '''
+
+    with torch.no_grad():
+        idx = torch.argmax(output, dim=1)
+        return (idx == target).tolist()
 
 def get_answer(output, target, vocabulary=None):
     '''
