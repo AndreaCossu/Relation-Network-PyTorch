@@ -38,6 +38,7 @@ parser.add_argument('--en_valid', action="store_true", help='Use en-valid-10k in
 parser.add_argument('--weight_decay', type=float, default=0, help='optimizer hyperparameter')
 parser.add_argument('--learning_rate', type=float, default=2e-4, help='optimizer hyperparameter')
 
+parser.add_argument('--test_on_test', action="store_true", help='final test on test set instead of validation set')
 parser.add_argument('--test_jointly', action="store_true", help='final test on all tasks')
 parser.add_argument('--cuda', action="store_true", help='use gpu')
 parser.add_argument('--load', action="store_true", help=' load saved model')
@@ -69,7 +70,8 @@ if args.babi_tasks == -1: # 20 tasks are already dumped to file
 
     train_stories = load_stories(args.en_valid, 'train')
     validation_stories = load_stories(args.en_valid, 'valid')
-    test_stories = load_stories(args.en_valid, 'test')
+    if args.test_on_test:
+        test_stories = load_stories(args.en_valid, 'test')
 
     print('Babi loaded')
 
@@ -98,8 +100,9 @@ else: # single combinations have to be preprocessed from scratch
         train_stories = vectorize_babi(train_stories, dictionary, device)
         validation_stories, _, _ = read_babi(path_babi_base, to_read_val, args.babi_tasks, only_relevant=args.only_relevant)
         validation_stories = vectorize_babi(validation_stories, dictionary, device)
-    test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks, only_relevant=args.only_relevant)
-    test_stories = vectorize_babi(test_stories, dictionary, device)
+    if args.test_on_test:
+        test_stories, _, _ = read_babi(path_babi_base, to_read_test, args.babi_tasks, only_relevant=args.only_relevant)
+        test_stories = vectorize_babi(test_stories, dictionary, device)
 
 
 # save_dict(dictionary, args.en_valid)
@@ -135,6 +138,9 @@ if args.epochs > 0:
     print("Start training")
     avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.no_save, device, result_folder)
     print("End training!")
+
+if not args.test_on_test:
+    test_stories = validation_stories
 
 if args.test_jointly:
     print("Testing jointly...")
