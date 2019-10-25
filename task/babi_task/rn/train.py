@@ -6,7 +6,7 @@ from src.utils import  BabiDataset, batchify
 from collections import defaultdict
 
 
-def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save, device, result_folder):
+def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, no_save, device, result_folder):
 
     train_babi_dataset = BabiDataset(train_stories)
     best_val = 1000.
@@ -26,8 +26,8 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
         lstm.train()
 
         for batch_id, (question_batch,answer_batch,facts_batch,_,ordering) in enumerate(train_dataset):
-            if batch_id % 5000 == 0:
-                print("Batch within epoch: ", batch_id, "/", len(train_dataset))
+            if (batch_id+1) % 5000 == 0:
+                print("Batch ", batch_id, "/", len(train_dataset), " - epoch ", epoch, ".")
 
             question_batch,answer_batch,facts_batch,ordering = question_batch.to(device), \
                                                             answer_batch.to(device), \
@@ -60,7 +60,6 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
             train_accuracies.append(correct)
             train_losses.append(loss.item())
 
-        print("Epoch ", epoch, "/ ", epochs)
         avg_train_losses.append(sum(train_losses)/len(train_losses))
         avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
 
@@ -105,8 +104,8 @@ def test(stories, lstm, rn, criterion, device):
 
 
         for batch_id, (question_batch,answer_batch,facts_batch,_,ordering) in enumerate(test_dataset):
-            if batch_id % 1000 == 0:
-                print("Batch within test: ", batch_id, "/", len(test_dataset))
+            if (batch_id+1) % 1000 == 0:
+                print("Test batch: ", batch_id, "/", len(test_dataset))
 
             question_batch,answer_batch,facts_batch,ordering = question_batch.to(device), \
                                                             answer_batch.to(device), \

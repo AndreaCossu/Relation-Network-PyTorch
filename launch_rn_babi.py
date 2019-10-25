@@ -42,7 +42,6 @@ parser.add_argument('--test_jointly', action="store_true", help='final test on a
 parser.add_argument('--cuda', action="store_true", help='use gpu')
 parser.add_argument('--load', action="store_true", help=' load saved model')
 parser.add_argument('--no_save', action="store_true", help='disable model saving')
-parser.add_argument('--print_every', type=int, default=500, help='print information every print_every steps')
 args = parser.parse_args()
 
 result_folder = get_run_folder(args.name)
@@ -134,7 +133,7 @@ criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 
 if args.epochs > 0:
     print("Start training")
-    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save, device, result_folder)
+    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.no_save, device, result_folder)
     print("End training!")
 
 if args.test_jointly:
