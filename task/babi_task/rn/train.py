@@ -61,7 +61,7 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
         avg_train_losses.append(sum(train_losses)/len(train_losses))
         avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
 
-        val_loss, val_accuracy = test(validation_stories,lstm,rn,criterion, device)
+        val_loss, val_accuracy = test(validation_stories,lstm,rn,criterion, device, batch_size)
         val_accuracies.append(val_accuracy)
         val_losses.append(val_loss)
 
