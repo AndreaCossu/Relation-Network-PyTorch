@@ -39,7 +39,7 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
             rn.zero_grad()
 
             h_q = lstm.reset_hidden_state_query()
-            h_f = lstm.reset_hidden_state_fact(batch_size*facts_batch.size(1))
+            h_f = lstm.reset_hidden_state_fact(facts_batch.size(0))
 
             question_emb, h_q = lstm.process_query(question_batch, h_q)
 
@@ -113,7 +113,7 @@ def test(stories, lstm, rn, criterion, device, batch_size):
             rn.zero_grad()
 
             h_q = lstm.reset_hidden_state_query()
-            h_f = lstm.reset_hidden_state_fact(batch_size*facts_batch.size(1))
+            h_f = lstm.reset_hidden_state_fact(facts_batch.size(0))
 
             question_emb, h_q = lstm.process_query(question_batch, h_q)
 
