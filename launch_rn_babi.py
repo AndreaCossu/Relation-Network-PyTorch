@@ -1,7 +1,7 @@
 import wandb
 from src.models.RN import RelationNetwork
 from src.nlp_utils import read_babi, vectorize_babi
-from src.models.LSTM import LSTM, LSTM_noemb
+from src.models.LSTM import LSTM
 import torch
 import argparse
 import os
@@ -23,7 +23,7 @@ parser.add_argument('--lstm_layers', type=int, default=1, help='layers of LSTM')
 
 parser.add_argument('--emb_dim', type=int, default=32, help='word embedding dimension')
 parser.add_argument('--only_relevant', action="store_true", help='read only relevant fact from babi dataset')
-parser.add_argument('--batch_size_stories', type=int, default=1, help='batch size')
+parser.add_argument('--batch_size', type=int, default=3, help='batch size')
 
 parser.add_argument('--dropout', action="store_true", help='enable dropout')
 parser.add_argument('--relu_act', action="store_true", help='use relu activation for MLP instead of tanh')
@@ -120,11 +120,10 @@ def init_weights(m):
 dict_size = len(dictionary)
 print("Dictionary size: ", dict_size)
 
-lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_dim, args.lstm_layers, device, wave_penc=args.wave_penc, dropout=args.dropout).to(device)
-# lstm = LSTM_noemb(args.hidden_dim_lstm, dict_size, args.batch_size_stories, args.lstm_layers, device).to(device)
+lstm = LSTM(args.hidden_dim_lstm, args.batch_size, dict_size, args.emb_dim, args.lstm_layers, device, wave_penc=args.wave_penc, dropout=args.dropout).to(device)
 lstm.apply(init_weights)
 
-rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.dropout, args.relu_act, args.batch_size_stories, args.wave_penc, device).to(device)
+rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.dropout, args.relu_act, args.batch_size, args.wave_penc, device).to(device)
 rn.apply(init_weights)
 
 wandb.watch(rn)
@@ -139,7 +138,7 @@ criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 
 if args.epochs > 0:
     print("Start training")
-    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.no_save, device, result_folder)
+    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.no_save, device, result_folder, args.batch_size)
     print("End training!")
 
 if not args.test_on_test:

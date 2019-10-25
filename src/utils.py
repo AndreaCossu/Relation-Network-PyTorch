@@ -52,7 +52,7 @@ def batchify(data_batch):
     each fact for each question.
     '''
 
-    if len(data_batch) == 1:
+    if len(data_batch) == 1: # if batch_size == 1
         return data_batch[0]
 
     q_s = []
@@ -68,7 +68,17 @@ def batchify(data_batch):
         l_s.append(el[3])
         o_s.append(el[4])
 
-    return ( pad_sequence(q_s, batch_first=True), torch.stack(a_s, dim=0), f_s, torch.stack(l_s, dim=0), o_s  )
+    # lengths is used only for pack sequence with LSTM
+    #lengths_f = torch.tensor([el.size(0) for el in f_s]).long() # number of facts
+    #lengths_q = torch.tensor([el.size(0) for el in q_s]).long() # number of words
+
+    rows, columns = max([ el.size(0) for el in f_s] ), max([ el.size(1) for el in f_s] )
+    ff = torch.ones(len(f_s), rows, columns)*157 # len(dictionary) as pad value
+    for i, t in enumerate(f_s):
+        r, c = t.size(0), t.size(1)
+        ff[i, :r, :c] = t
+
+    return ( pad_sequence(q_s, batch_first=True, padding_value=157), torch.stack(a_s, dim=0), ff.view(-1, ff.size(2)), torch.stack(l_s, dim=0), o_s, len(f_s))
 
 def save_stories(stories, valid, name):
     if valid:
@@ -136,7 +146,7 @@ def write_test(folder, losses, accs):
         w = csv.writer(f)
         for key, val in losses.items():
             w.writerow([key, val])
-
+            
 
 def get_answer(output, target, vocabulary=None):
     '''
