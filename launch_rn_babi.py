@@ -6,15 +6,14 @@ import torch
 import argparse
 import os
 from itertools import chain
-from src.utils import files_names_test_en, files_names_train_en, files_names_test_en_valid, files_names_train_en_valid, files_names_val_en_valid
-from src.utils import saving_path_rn, names_models, load_models, split_train_validation
-from src.utils import load_dict, save_dict, save_stories, load_stories
+from src.utils import *
 from task.babi_task.rn.train import train, test, test_separately
 
 
-wandb.init(project="relation-network-babi")
-
 parser = argparse.ArgumentParser()
+
+parser.add_argument('name', type=str, help='folder in which to store results')
+
 parser.add_argument('--epochs', type=int, default=1, help='epochs to train.')
 parser.add_argument('--hidden_dims_g', nargs='+', type=int, default=[256, 256, 256], help='layers of relation function g')
 parser.add_argument('--output_dim_g', type=int, default=256, help='output dimension of relation function g')
@@ -47,7 +46,9 @@ parser.add_argument('--no_save', action="store_true", help='disable model saving
 parser.add_argument('--print_every', type=int, default=500, help='print information every print_every steps')
 args = parser.parse_args()
 
-wandb.config.update(args)
+result_folder = get_run_folder(args.name)
+
+wandb.init(project="relation-network-babi", name=args.name, config=args, dir=result_folder)
 
 mode = 'cpu'
 if args.cuda:
@@ -76,12 +77,12 @@ if args.babi_tasks == -1: # 20 tasks are already dumped to file
 
 else: # single combinations have to be preprocessed from scratch
     if args.en_valid:
-        path_babi_base = os.path.join(cd, "babi/en-valid-10k/")
+        path_babi_base = os.path.join(cd, os.path.join("babi", "en-valid-10k"))
         to_read_test = [files_names_test_en_valid[i-1] for i in args.babi_tasks]
         to_read_val = [files_names_val_en_valid[i-1] for i in args.babi_tasks]
         to_read_train = [files_names_train_en_valid[i-1] for i in args.babi_tasks]
     else:
-        path_babi_base = os.path.join(cd, "babi/en-10k/")
+        path_babi_base = os.path.join(cd, os.path.join("babi", "en-10k"))
         to_read_test = [files_names_test_en[i-1] for i in args.babi_tasks]
         to_read_train = [files_names_train_en[i-1] for i in args.babi_tasks]
 
@@ -116,7 +117,7 @@ def init_weights(m):
 
 
 dict_size = len(dictionary)
-#print("Dictionary size: ", dict_size)
+print("Dictionary size: ", dict_size)
 
 lstm = LSTM(args.hidden_dim_lstm, args.batch_size_stories, dict_size, args.emb_dim, args.lstm_layers, device, wave_penc=args.wave_penc, dropout=args.dropout).to(device)
 # lstm = LSTM_noemb(args.hidden_dim_lstm, dict_size, args.batch_size_stories, args.lstm_layers, device).to(device)
@@ -126,7 +127,7 @@ rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g
 rn.apply(init_weights)
 
 if args.load:
-    load_models([(lstm, names_models[0]), (rn, names_models[1])], saving_path_rn)
+    load_models([(lstm, names_models[0]), (rn, names_models[1])], result_folder, saving_path_rn)
 
 optimizer = torch.optim.Adam(chain(lstm.parameters(), rn.parameters()), args.learning_rate, weight_decay=args.weight_decay)
 
@@ -134,7 +135,7 @@ criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 
 if args.epochs > 0:
     print("Start training")
-    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save, device, args.wandb_save)
+    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.print_every, args.no_save, device, result_folder, args.wandb_save)
     print("End training!")
 
 if args.test_jointly:
@@ -150,32 +151,7 @@ else:
     print("Test accuracy: ", avg_test_accuracies)
     print("Test loss: ", avg_test_losses)
 
+write_test(result_folder, avg_test_losses, avg_test_accuracies)
 
 if args.epochs > 0:
-    import matplotlib
-
-    if args.cuda:
-        matplotlib.use('Agg')
-
-    import matplotlib.pyplot as plt
-
-
-    plt.figure()
-    plt.plot(range(len(avg_train_losses)), avg_train_losses, 'b', label='train')
-    plt.plot(range(len(val_losses)), val_losses, 'r', label='val')
-    plt.legend(loc='best')
-
-    if args.cuda:
-        plt.savefig('plots/loss.png')
-    else:
-        plt.show()
-
-    plt.figure()
-    plt.plot(range(len(avg_train_accuracies)), avg_train_accuracies, 'b', label='train')
-    plt.plot(range(len(val_accuracies)), val_accuracies, 'r', label='val')
-    plt.legend(loc='best')
-
-    if args.cuda:
-        plt.savefig('plots/accuracy.png')
-    else:
-        plt.show()
+    plot_results(result_folder, avg_train_losses, val_losses, avg_train_accuracies, val_accuracies)

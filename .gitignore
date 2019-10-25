@@ -1,7 +1,6 @@
 babi/*
 CLEVR/*
-saved_models/*
-plots/*
+results/*
 sort-of-clevr
 
 __pycache__/

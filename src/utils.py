@@ -1,11 +1,30 @@
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 import torch
 from sklearn.model_selection import train_test_split
 from torch.nn.utils.rnn import pad_sequence
 import random
 import os
+import csv
 import pickle
 import wandb
 from torch.utils.data import Dataset
+
+def plot_results(folder, avg_train_losses, val_losses, avg_train_accuracies, val_accuracies):
+    plt.figure()
+    plt.plot(range(len(avg_train_losses)), avg_train_losses, 'b', label='train')
+    plt.plot(range(len(val_losses)), val_losses, 'r', label='val')
+    plt.legend(loc='best')
+
+    plt.savefig(os.path.join(folder, 'loss.png'))
+
+    plt.figure()
+    plt.plot(range(len(avg_train_accuracies)), avg_train_accuracies, 'b', label='train')
+    plt.plot(range(len(val_accuracies)), val_accuracies, 'r', label='val')
+    plt.legend(loc='best')
+
+    plt.savefig(os.path.join(folder, 'accuracy.png'))
 
 class BabiDataset(Dataset):
     """Babi Dataset """
@@ -94,6 +113,32 @@ def load_dict(valid):
 
     return dictionary
 
+def get_run_folder(dest):
+    default=results_folder
+
+    target = os.path.join(default, dest)
+    if not os.path.isdir(target):
+        try:
+            os.makedirs(target)
+            folder = target
+
+        except OSError:
+            print("Error when creating experiment folder")
+            folder = default
+
+    return folder
+
+def write_test(folder, losses, accs):
+    with open(os.path.join(folder, 'test_accs.csv', 'w')) as f:
+        w = csv.writer(f)
+        for key, val in accs.items():
+            w.writerow([key, val])
+    with open(os.path.join(folder, 'test_losses.csv', 'w')) as f:
+        w = csv.writer(f)
+        for key, val in losses.items():
+            w.writerow([key, val])
+
+
 def get_answer(output, target, vocabulary=None):
     '''
     :param output: tensor representing output of the model
@@ -140,7 +185,7 @@ def random_idx_gen(start,end):
 
 
 
-def save_models(models, path, wandb_save=False):
+def save_models(models, result_folder, path, wandb_save=False):
     '''
     :param models: iterable of (models to save, name)
     :param paths: saving path
@@ -148,36 +193,33 @@ def save_models(models, path, wandb_save=False):
     dict_m = {}
     for model, name in models:
         dict_m[name] = model.state_dict()
-        if wandb_save:
-            model.save(os.path.join(wandb.run.dir, name+".pt"))
 
-    torch.save(dict_m, path)
+    torch.save(dict_m, os.path.join(result_folder, path))
 
 
-
-
-def load_models(models, path):
+def load_models(models, result_folder, path):
     '''
     :param models: iterable of models to save
     :param paths: iterable of saving paths
     '''
 
-    checkpoint = torch.load(path)
+    checkpoint = torch.load(os.path.join(result_folder, path))
     for model, name in models:
         model.load_state_dict(checkpoint[name])
 
 
-saving_path_dict_valid = 'saved_models/dict_20_en-valid-10k.data'
-saving_path_dict_not_valid = 'saved_models/dict_20_en-10k.data'
+saving_path_dict_valid = 'babi/dicts/dict_20_en-valid-10k.data'
+saving_path_dict_not_valid = 'babi/dicts/dict_20_en-10k.data'
 
-saving_path_dict_valid_plain = 'saved_models/dict_20_en-valid-10k.txt'
-saving_path_dict_not_valid_plain = 'saved_models/dict_20_en-10k.txt'
+saving_path_dict_valid_plain = 'babi/dicts/dict_20_en-valid-10k.txt'
+saving_path_dict_not_valid_plain = 'babi/dicts/dict_20_en-10k.txt'
 
 saving_stories_valid  = 'babi/vectorized_en-10k/'
 saving_stories_not_valid  = 'babi/vectorized_en-valid-10k/'
 
-saving_path_rn = 'saved_models/rn.tar'
-saving_path_rrn = 'saved_models/rrn.tar'
+results_folder = 'results'
+saving_path_rn = 'rn.tar'
+saving_path_rrn = 'rrn.tar'
 names_models = ['LSTM', 'RN', 'RRN', 'MLP']
 
 files_names_train_en_valid = [
