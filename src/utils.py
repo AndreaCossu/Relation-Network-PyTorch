@@ -185,7 +185,7 @@ def random_idx_gen(start,end):
 
 
 
-def save_models(models, result_folder, path, wandb_save=False):
+def save_models(models, result_folder, path):
     '''
     :param models: iterable of (models to save, name)
     :param paths: saving path

@@ -6,7 +6,7 @@ from src.utils import  BabiDataset, batchify
 from collections import defaultdict
 
 
-def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save, device, result_folder, wandb_save=False):
+def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, print_every, no_save, device, result_folder):
 
     train_babi_dataset = BabiDataset(train_stories)
     best_val = 1000.
@@ -70,7 +70,7 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
 
         if not no_save:
             if val_losses[-1] < best_val:
-                save_models([(lstm, names_models[0]), (rn, names_models[1])], result_folder, saving_path_rn, wandb_save)
+                save_models([(lstm, names_models[0]), (rn, names_models[1])], result_folder, saving_path_rn)
                 best_val = val_losses[-1]
 
         print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
