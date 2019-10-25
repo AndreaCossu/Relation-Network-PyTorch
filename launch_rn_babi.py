@@ -139,16 +139,16 @@ if args.epochs > 0:
 
 if args.test_jointly:
     print("Testing jointly...")
-    # avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion, device)
+    avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion, device)
 
-    # print("Test accuracy: ", avg_test_accuracy)
-    # print("Test loss: ", avg_test_loss)
+    print("Test accuracy: ", avg_test_accuracy)
+    print("Test loss: ", avg_test_loss)
 else:
     print("Testing separately...")
-    # avg_test_losses, avg_test_accuracies = test_separately(test_stories, lstm, rn, criterion, device)
+    avg_test_losses, avg_test_accuracies = test_separately(test_stories, lstm, rn, criterion, device)
 
-    # print("Test accuracy: ", avg_test_accuracies)
-    # print("Test loss: ", avg_test_losses)
+    print("Test accuracy: ", avg_test_accuracies)
+    print("Test loss: ", avg_test_losses)
 
 
 if args.epochs > 0:
