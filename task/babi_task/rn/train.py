@@ -173,8 +173,7 @@ def test_separately(stories, lstm, rn, criterion, device, batch_size):
             corrects = get_answer_separately(rr, answer_batch)
 
             for el, correct in zip(task_label, corrects):
-                if correct:
-                    accuracies[el].append(1.)
+                accuracies[el].append(1.) if correct else accuracies[el].append(0.)
 
         f = lambda x: sum(x) / float(len(x)) # get mean over each list values of dictionary
         avg_test_acc = {k: f(v) for k,v in accuracies.items()}
