@@ -27,7 +27,27 @@ This repository uses Weights and Biases (W&B) to monitor experiments. You can cr
   * Run it with `python launch_rn_babi.py [options]`.
   * Options are listed and explained with `python launch_rn_babi.py --help`.
 
-To reproduce results execute `python launch_rn_babi.py test --en_valid --learning_rate 1e-4 --relu_act --epochs 100 ` and then check under `results/test` to see the results. If you want to do the final test on the test set instead of validation set, use `--test_on_test` option.
+To reproduce results execute `python launch_rn_babi.py test --en_valid --learning_rate 1e-4 --relu_act --epochs 70 ` and then check under `results/test` to see the results. If you want to do the final test on the test set instead of validation set, use `--test_on_test` option. The final accuracy on validation set is (task: accuracy):
+* 1: 0.97
+* 2: 0.83
+* 3: 0.80
+* 4: 0.41
+* 5: 0.97
+* 6: 0.98
+* 7: 0.98
+* 8: 0.99
+* 9: 0.99
+* 10: 0.95
+* 11: 0.96
+* 12: 0.98
+* 13: 0.95
+* 14: 0.98
+* 15: 0.95
+* 16: 0.47
+* 17: 0.48
+* 18: 0.97
+* 19: 0.51
+* 20: 0.99
 
 ## Observations
 * Batchify babi is essential to training performance, both in terms of convergence time and in terms of final accuracy.
