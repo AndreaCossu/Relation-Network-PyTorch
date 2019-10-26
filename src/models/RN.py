@@ -15,7 +15,7 @@ class RelationNetwork(nn.Module):
             self.object_dim = object_dim + 20 # 20 is the length of the one-of-k positional encoding of max 20 facts
         else:
             self.object_dim = object_dim
-            
+
         self.query_dim = object_dim
         self.input_dim_g = 2 * self.object_dim + self.query_dim # g analyzes pairs of objects
         self.hidden_dims_g = hidden_dims_g
@@ -36,11 +36,6 @@ class RelationNetwork(nn.Module):
         :param q: (hidden_dim_q) query, optional.
         '''
 
-        x = x.unsqueeze(0) # account for batch_size = 1
-
-        if q is not None:
-            q = q.unsqueeze(0)
-
         n_facts = x.size(1)
 
         xi = x.repeat(1, n_facts, 1)
@@ -53,15 +48,11 @@ class RelationNetwork(nn.Module):
         else:
             pair_concat = torch.cat((xi,xj), dim=2) # (B, n_facts*n_facts, 2*hidden_dim_f)
 
+        relations = self.g(pair_concat.view(-1, pair_concat.size(2))) # (n_facts*n_facts, hidden_dim_g)
+        relations = relations.view(pair_concat.size(0), pair_concat.size(1), self.output_dim_g)
 
-        pair_concat = pair_concat.squeeze(0) # remove batch=1
-
-        relations = self.g(pair_concat) # (n_facts*n_facts, hidden_dim_g)
-
-        embedding = torch.sum(relations, dim=0) # (hidden_dim_g)
+        embedding = torch.sum(relations, dim=1) # (hidden_dim_g)
 
         out = self.f(embedding) # (hidden_dim_f)
-
-        out = out.unsqueeze(0)
 
         return out

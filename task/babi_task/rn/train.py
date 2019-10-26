@@ -2,11 +2,11 @@ import torch
 import wandb
 from torch.utils.data import DataLoader
 from src.utils import save_models, saving_path_rn, get_answer, names_models
-from src.utils import  BabiDataset, batchify
+from src.utils import  BabiDataset, batchify, get_answer_separately
 from collections import defaultdict
 
 
-def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, no_save, device, result_folder):
+def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, no_save, device, result_folder, batch_size):
 
     train_babi_dataset = BabiDataset(train_stories)
     best_val = 1000.
@@ -20,19 +20,18 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
         train_accuracies = []
         train_losses = []
 
-        train_dataset = DataLoader(train_babi_dataset, batch_size=1, shuffle=False, collate_fn=batchify)
+        train_dataset = DataLoader(train_babi_dataset, batch_size=batch_size, shuffle=True, collate_fn=batchify, drop_last=True)
 
         rn.train()
         lstm.train()
 
-        for batch_id, (question_batch,answer_batch,facts_batch,_,ordering) in enumerate(train_dataset):
+        for batch_id, (question_batch,answer_batch,facts_batch,_,_) in enumerate(train_dataset):
             if (batch_id+1) % 5000 == 0:
                 print("Batch ", batch_id, "/", len(train_dataset), " - epoch ", epoch, ".")
 
-            question_batch,answer_batch,facts_batch,ordering = question_batch.to(device), \
+            question_batch,answer_batch,facts_batch = question_batch.to(device), \
                                                             answer_batch.to(device), \
-                                                            facts_batch.to(device), \
-                                                            ordering.to(device)
+                                                            facts_batch.to(device)
 
 
 
@@ -43,13 +42,12 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
             h_f = lstm.reset_hidden_state_fact(facts_batch.size(0))
 
             question_emb, h_q = lstm.process_query(question_batch, h_q)
-            question_emb = question_emb[0,-1]
 
             facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
 
             rr = rn(facts_emb, question_emb)
 
-            loss = criterion(rr, answer_batch.unsqueeze(0))
+            loss = criterion(rr, answer_batch)
 
             loss.backward()
             optimizer.step()
@@ -63,7 +61,7 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
         avg_train_losses.append(sum(train_losses)/len(train_losses))
         avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
 
-        val_loss, val_accuracy = test(validation_stories,lstm,rn,criterion, device)
+        val_loss, val_accuracy = test(validation_stories,lstm,rn,criterion, device, batch_size)
         val_accuracies.append(val_accuracy)
         val_losses.append(val_loss)
 
@@ -89,7 +87,7 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
     return avg_train_losses, avg_train_accuracies, val_losses, val_accuracies
 
 
-def test(stories, lstm, rn, criterion, device):
+def test(stories, lstm, rn, criterion, device, batch_size):
 
     with torch.no_grad():
 
@@ -100,17 +98,16 @@ def test(stories, lstm, rn, criterion, device):
         lstm.eval()
 
         test_babi_dataset = BabiDataset(stories)
-        test_dataset = DataLoader(test_babi_dataset, batch_size=1, shuffle=False, collate_fn=batchify)
+        test_dataset = DataLoader(test_babi_dataset, batch_size=batch_size, shuffle=False, collate_fn=batchify, drop_last=True)
 
 
-        for batch_id, (question_batch,answer_batch,facts_batch,_,ordering) in enumerate(test_dataset):
+        for batch_id, (question_batch,answer_batch,facts_batch,_,_) in enumerate(test_dataset):
             if (batch_id+1) % 1000 == 0:
                 print("Test batch: ", batch_id, "/", len(test_dataset))
 
-            question_batch,answer_batch,facts_batch,ordering = question_batch.to(device), \
+            question_batch,answer_batch,facts_batch = question_batch.to(device), \
                                                             answer_batch.to(device), \
-                                                            facts_batch.to(device), \
-                                                            ordering.to(device)
+                                                            facts_batch.to(device)
 
             lstm.zero_grad()
             rn.zero_grad()
@@ -119,13 +116,12 @@ def test(stories, lstm, rn, criterion, device):
             h_f = lstm.reset_hidden_state_fact(facts_batch.size(0))
 
             question_emb, h_q = lstm.process_query(question_batch, h_q)
-            question_emb = question_emb[0,-1]
 
             facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
 
             rr = rn(facts_emb, question_emb)
 
-            loss = criterion(rr, answer_batch.unsqueeze(0))
+            loss = criterion(rr, answer_batch)
 
 
             correct, _ = get_answer(rr, answer_batch)
@@ -136,7 +132,7 @@ def test(stories, lstm, rn, criterion, device):
         return test_loss / float(len(test_dataset)), test_accuracy / float(len(test_dataset))
 
 
-def test_separately(stories, lstm, rn, criterion, device):
+def test_separately(stories, lstm, rn, criterion, device, batch_size):
     '''
     Supported only with batch_size = 1 because it tests separately each babi task.
     To use it with batch_size > 1 accounts for different task accuracies in each batch.
@@ -144,25 +140,23 @@ def test_separately(stories, lstm, rn, criterion, device):
 
     with torch.no_grad():
 
-        losses = defaultdict(list)
         accuracies = defaultdict(list)
 
         rn.eval()
         lstm.eval()
 
         test_babi_dataset = BabiDataset(stories)
-        test_dataset = DataLoader(test_babi_dataset, batch_size=1, shuffle=False, collate_fn=batchify)
+        test_dataset = DataLoader(test_babi_dataset, batch_size=batch_size, shuffle=False, collate_fn=batchify, drop_last=True)
 
 
-        for batch_id, (question_batch,answer_batch,facts_batch,task_label,ordering) in enumerate(test_dataset):
+        for batch_id, (question_batch,answer_batch,facts_batch,task_label,_) in enumerate(test_dataset):
             if batch_id % 1000 == 0:
                 print("Batch within test: ", batch_id, "/", len(test_dataset))
 
-            question_batch,answer_batch,facts_batch, task_label, ordering = question_batch.to(device), \
+            question_batch,answer_batch,facts_batch, task_label = question_batch.to(device), \
                                                             answer_batch.to(device), \
                                                             facts_batch.to(device), \
-                                                            task_label.item(), \
-                                                            ordering.to(device)
+                                                            task_label.tolist()
 
             lstm.zero_grad()
             rn.zero_grad()
@@ -171,22 +165,17 @@ def test_separately(stories, lstm, rn, criterion, device):
             h_f = lstm.reset_hidden_state_fact(facts_batch.size(0))
 
             question_emb, h_q = lstm.process_query(question_batch, h_q)
-            question_emb = question_emb[0,-1]
 
             facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
 
             rr = rn(facts_emb, question_emb)
 
-            loss = criterion(rr, answer_batch.unsqueeze(0))
+            corrects = get_answer_separately(rr, answer_batch)
 
-
-            correct, _ = get_answer(rr, answer_batch)
-
-            accuracies[task_label].append(correct)
-            losses[task_label].append(loss.item())
+            for el, correct in zip(task_label, corrects):
+                accuracies[el].append(1.) if correct else accuracies[el].append(0.)
 
         f = lambda x: sum(x) / float(len(x)) # get mean over each list values of dictionary
-        avg_test_loss = {k: f(v) for k,v in losses.items()}
         avg_test_acc = {k: f(v) for k,v in accuracies.items()}
 
-        return avg_test_loss, avg_test_acc
+        return avg_test_acc
