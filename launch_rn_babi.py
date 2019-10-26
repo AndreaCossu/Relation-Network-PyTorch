@@ -45,6 +45,10 @@ parser.add_argument('--load', action="store_true", help=' load saved model')
 parser.add_argument('--no_save', action="store_true", help='disable model saving')
 args = parser.parse_args()
 
+if args.batch_size == 1:
+    print("Batch size must be > 1. Setting it to 2.")
+    args.batch_size = 2
+    
 result_folder = get_run_folder(args.name)
 
 wandb.init(project="relation-network-babi", name=args.name, config=args, dir=result_folder)
