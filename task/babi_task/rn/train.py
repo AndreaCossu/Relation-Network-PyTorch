@@ -153,7 +153,7 @@ def test_separately(stories, lstm, rn, criterion, device, batch_size):
             if batch_id % 1000 == 0:
                 print("Batch within test: ", batch_id, "/", len(test_dataset))
 
-            question_batch,answer_batch,facts_batch, task_label, _,_ = question_batch.to(device), \
+            question_batch,answer_batch,facts_batch, task_label = question_batch.to(device), \
                                                             answer_batch.to(device), \
                                                             facts_batch.to(device), \
                                                             task_label.tolist(), \
