@@ -156,7 +156,7 @@ else:
     avg_test_loss = None
     print("Test accuracy: ", avg_test_accuracy)
 
-write_test(result_folder, losses=avg_test_loss, accs=avg_test_accuracy)
+    write_test(result_folder, losses=avg_test_loss, accs=avg_test_accuracy)
 
 if args.epochs > 0:
     plot_results(result_folder, avg_train_losses, val_losses, avg_train_accuracies, val_accuracies)
