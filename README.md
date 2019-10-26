@@ -26,6 +26,11 @@ This implementation tests the Relation Network model (RN) and the Recurrent Rela
 
 To reproduce results execute `python launch_rn_babi.py test --en_valid --learning_rate 1e-4 --relu_act --epochs 100 ` and then check under `results/test` to see the results. If you want to do the final test on the test set instead of validation set, use `--test_on_test` option.
 
+## Observations
+* Batchify babi is essential to training performance, both in terms of convergence time and in terms of final accuracy.
+* In order to batchify babi it is necessary to pad supporting facts both on #words and #facts dimensions.
+* Relu activation dramatically improves accuracy, but only when using `batch size > 1`. If `batch size == 1` relu prevents learning, while tanh achieves `~74%` accuracy on the joint dataset.
+
 # Train and test RRN (WORK IN PROGRESS)
 * Model implementation is inside `src/models/RRN.py`
 * Train and test functions are inside `task/babi_task/rrn/train.py`
