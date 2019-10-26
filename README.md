@@ -5,15 +5,17 @@ Implementation of Recurrent Relational Network. Original paper: https://arxiv.or
 
 This repository uses PyTorch v1.3 (Python3.7).
 
-## WORK IN PROGRESS
+## RRN is still a WORK IN PROGRESS
 
 # Implementation details
 This implementation tests the Relation Network model (RN) and the Recurrent Relational Network model (RRN) against the babi dataset, available at https://research.fb.com/downloads/babi/
 
 # Prerequisites
-* Download the babi dataset (20 tasks) and place it under `babi/` folder in the project root
-* Create a folder `saved_models` to store saved models
-* Create a folder `plots` to store saved plots
+* Run `pip install -r requirements.txt`
+* Create a folder `babi`
+* Download the babi dataset (20 tasks) already divided and preprocessed in train, validation and test at this link: https://drive.google.com/drive/folders/1HkO_w7hbxxWZV4nbGl0Y2w_AuSa4ktub?usp=sharing and put the downloaded folder inside `babi`.
+* Download the word dictionaries at: https://drive.google.com/drive/folders/1Ktd4kL1FJBiY_R_HoqlicjmRemkq8xzC?usp=sharing and put the downloaded folder inside `babi`.
+* Create a folder `results` to store experiment results (both plots and saved models)
 
 # Train and test RN
 * Model implementation is inside `src/models/RN.py`
@@ -21,15 +23,13 @@ This implementation tests the Relation Network model (RN) and the Recurrent Rela
 * The main script is `launch_rn_babi.py`.
   * Run it with `python launch_rn_babi.py [options]`.
   * Options are listed and explained with `python launch_rn_babi.py --help`.
-  * In particular you can select which babi tasks to train and test. You can choose to read all the facts or just the relevant ones.
 
-# Train and test RRN
+To reproduce results execute `python launch_rn_babi.py test --en_valid --learning_rate 1e-4 --relu_act --epochs 100 ` and then check under `results/test` to see the results. If you want to do the final test on the test set instead of validation set, use `--test_on_test` option.
+
+# Train and test RRN (WORK IN PROGRESS)
 * Model implementation is inside `src/models/RRN.py`
 * Train and test functions are inside `task/babi_task/rrn/train.py`
 * The main script is `launch_rrn_babi.py`.
-  * Run it with `python launch_rrn_babi.py [options]`.
+  * Run it with `python launch_rrn_babi.py experiment_name [options]`.
   * Options are listed and explained with `python launch_rrn_babi.py --help`.
-  * In particular you can select which babi tasks to train and test. You can choose to read all the facts or just the relevant ones.
-
-# Requirements
-Run `pip install -r requirements.txt`
+  * Use always `--en_valid` and never specify `--babi_tasks`.
