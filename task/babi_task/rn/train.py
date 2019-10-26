@@ -156,7 +156,7 @@ def test_separately(stories, lstm, rn, criterion, device, batch_size):
             question_batch,answer_batch,facts_batch, task_label = question_batch.to(device), \
                                                             answer_batch.to(device), \
                                                             facts_batch.to(device), \
-                                                            task_label.tolist(), \
+                                                            task_label.tolist()
 
             lstm.zero_grad()
             rn.zero_grad()
