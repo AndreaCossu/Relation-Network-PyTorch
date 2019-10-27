@@ -12,7 +12,7 @@ class RelationNetwork(nn.Module):
         super(RelationNetwork, self).__init__()
 
         if not wave_penc:
-            self.object_dim = object_dim + 20 # 20 is the length of the one-of-k positional encoding of max 20 facts
+            self.object_dim = object_dim + 40 # 20 is the length of the one-of-k positional encoding of max 20 facts
         else:
             self.object_dim = object_dim
 

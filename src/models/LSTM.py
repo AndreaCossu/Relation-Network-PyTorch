@@ -54,13 +54,19 @@ class LSTM(nn.Module):
         processed = h[0].squeeze().view(self.batch_size,-1,self.hidden_dim)
 
         if not self.wave_penc:
-            oneofk = torch.eye(20)[:processed.size(1)].repeat(self.batch_size,1,1).to(self.device)
+            # simple oneofk without random noise
+            #oneofk = torch.eye(20)[:processed.size(1)].repeat(self.batch_size,1,1).to(self.device)
+            oneofk = self.one_of_k(processed.size())
             final = torch.cat( (processed, oneofk), dim=2) # add positional encoding in one-of-k (max 20 facts)
         else:
             final = processed + self.wave_positional_encoding(processed.size(0), processed.size(1))
 
         return final, h
 
+    def one_of_k(self, size):
+        offs = torch.randint(0,21,(size[0],)) # random offsets (0-20)
+        eye = torch.eye(40)
+        return torch.stack(  [eye[o:size[1]+o] for o in offs], dim=0 ).to(self.device)
 
     def wave_positional_encoding(self, batch, facts):
         '''

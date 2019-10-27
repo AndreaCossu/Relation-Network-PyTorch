@@ -10,7 +10,7 @@ This repository uses PyTorch v1.3 (Python3.7).
 # Implementation details
 This implementation tests the Relation Network model (RN) and the Recurrent Relational Network model (RRN) against the babi dataset, available at https://research.fb.com/downloads/babi/
 
-# Weights and Biases 
+# Weights and Biases
 This repository uses Weights and Biases (W&B) to monitor experiments. You can create a free account on W&B (https://www.wandb.com/) or comment out the (few) lines starting with `wandb`. Without W&B, accuracy and loss plots will still be created and saved locally in the `results` folder.
 
 # Prerequisites
@@ -53,6 +53,7 @@ To reproduce results execute `python launch_rn_babi.py test --en_valid --learnin
 * Batchify babi is essential to training performance, both in terms of convergence time and in terms of final accuracy.
 * In order to batchify babi it is necessary to pad supporting facts both on #words and #facts dimensions.
 * Relu activation dramatically improves accuracy, but only when using `batch size > 1`. If `batch size == 1` relu prevents learning, while tanh achieves `~74%` accuracy on the joint dataset.
+* You can find the version with `batch size == 1` in the branch `no_batch`.
 
 # Train and test RRN (WORK IN PROGRESS)
 * Model implementation is inside `src/models/RRN.py`

@@ -5,7 +5,7 @@ from src.models.MLP import MLP
 
 class RRN(nn.Module):
 
-    def __init__(self, dim_hidden, message_dim, output_dim, f_dims, o_dims, device,  g_layers=1, edge_attribute_dim=0, single_output=False):
+    def __init__(self, dim_hidden, message_dim, output_dim, f_dims, o_dims, device, batch_size, g_layers=1, edge_attribute_dim=0, single_output=False):
         '''
         :param n_units: number of nodes in the graph
         :param edge_attribute_dim: 0 if edges have no attributes, else an integer. Default 0.
@@ -18,6 +18,7 @@ class RRN(nn.Module):
         self.dim_input = dim_hidden
         self.message_dim = message_dim
         self.output_dim = output_dim
+        self.batch_size = batch_size
 
         self.device = device
 
