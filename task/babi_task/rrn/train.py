@@ -6,7 +6,8 @@ from src.utils import  BabiDataset, batchify, get_answer_separately
 from collections import defaultdict
 
 
-def train(train_stories, validation_stories, epochs, mlp, lstm, rrn, criterion, optimizer, batch_size, no_save, device, result_folder):
+REASONING_STEPS = 3
+def train(train_stories, validation_stories, epochs, lstm, rrn, criterion, optimizer, batch_size, no_save, device, result_folder):
 
     train_babi_dataset = BabiDataset(train_stories)
     best_val = 1000.
@@ -25,7 +26,6 @@ def train(train_stories, validation_stories, epochs, mlp, lstm, rrn, criterion, 
 
         rrn.train()
         lstm.train()
-        mlp.train()
 
         for batch_id, (question_batch,answer_batch,facts_batch,_,_) in enumerate(train_dataset):
             if (batch_id+1) % 5000 == 0:
@@ -39,7 +39,6 @@ def train(train_stories, validation_stories, epochs, mlp, lstm, rrn, criterion, 
 
             lstm.zero_grad()
             rrn.zero_grad()
-            mlp.zero_grad()
 
             h_q = lstm.reset_hidden_state_query()
             h_f = lstm.reset_hidden_state_fact(facts_batch.size(0))
@@ -49,51 +48,43 @@ def train(train_stories, validation_stories, epochs, mlp, lstm, rrn, criterion, 
             facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
 
             input_mlp = torch.cat( (facts_emb, question_emb), dim=2)
+            final_input = rrn.process_input(input_mlp)
 
-            facts_encoded = mlp(input_mlp)
+            correct_rr = 0.
+            loss_rr = 0.
+            loss = 0.
+            for reasoning_step in range(REASONING_STEPS):
 
-            for reasoning_step in range(3):
+                h = rrn.reset_g(batch_id)
+                rr, hidden, h = rrn(final_input, facts_emb , h, question_emb)
 
-                lstm.zero_grad()
-                rrn.zero_grad()
-
-
-                rr, hidden, h = rrn(facts_emb, hidden , h, question_emb)
-
-                loss = criterion(rr, answer)
-                loss.backward(retain_graph=True)
-                optimizer.step()
+                loss += criterion(rr, answer_batch)
 
 
-                if reasoning_step == 2:
-                    correct, _ = get_answer(rr, answer)
-                    train_accuracies.append(correct)
-                    train_losses.append(loss.item())
-
-                    
-            rr = rrn(facts_encoded, question_emb)
-
-            loss = criterion(rr, answer_batch)
+                with torch.no_grad():
+                    correct, _ = get_answer(rr, answer_batch)
+                    correct_rr += correct
+                    loss_rr += loss.item()
 
             loss.backward()
             optimizer.step()
 
-
-            correct, _ = get_answer(rr, answer_batch)
-
-            train_accuracies.append(correct)
-            train_losses.append(loss.item())
+            train_accuracies.append(correct_rr / float(REASONING_STEPS))
+            train_losses.append(loss_rr / float(REASONING_STEPS))
 
         avg_train_losses.append(sum(train_losses)/len(train_losses))
         avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
 
+        '''
         val_loss, val_accuracy = test(validation_stories,lstm,rrn,criterion, device, batch_size)
         val_accuracies.append(val_accuracy)
         val_losses.append(val_loss)
+        '''
+        val_loss, val_accuracy = 1., 0.3
 
         if not no_save:
             if val_losses[-1] < best_val:
-                save_models([(lstm, names_models[0]), (rrn, names_models[1]), (mlp, names_models[3])], result_folder, saving_path_rrn)
+                save_models([(lstm, names_models[0]), (rrn, names_models[1])], result_folder, saving_path_rrn)
                 best_val = val_losses[-1]
 
         print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
@@ -112,54 +103,20 @@ def train(train_stories, validation_stories, epochs, mlp, lstm, rrn, criterion, 
 
     return avg_train_losses, avg_train_accuracies, val_losses, val_accuracies
 
-'''            rrn.train()
-            lstm.train()
 
-            facts_emb, question_emb, h_q, h_f = get_encoding(mlp, lstm, facts, question, device)
-            hidden = facts_emb.clone()
+def test(stories, lstm, rrn, criterion, device, batch_size):
 
-            h = rrn.reset_g(facts_emb.size(0))
+    lstm.eval()
+    rrn.eval()
 
-            for reasoning_step in range(3):
+    with torch.no_grad():
 
-                lstm.zero_grad()
-                rrn.zero_grad()
+        pass
 
+def test_separately(stories, lstm, rrn, device, batch_size):
+    lstm.eval()
+    rrn.eval()
 
-                rr, hidden, h = rrn(facts_emb, hidden , h, question_emb)
+    with torch.no_grad():
 
-                loss = criterion(rr, answer)
-                loss.backward(retain_graph=True)
-                optimizer.step()
-
-
-                if reasoning_step == 2:
-                    correct, _ = get_answer(rr, answer)
-                    train_accuracies.append(correct)
-                    train_losses.append(loss.item())
-
-            if ( ((i+1) %  print_every) == 0):
-                print("Epoch ", i+1, " / ", epochs)
-                avg_train_losses.append(sum(train_losses)/len(train_losses))
-                avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
-
-                val_loss, val_accuracy = test(validation_stories, mlp, lstm,rrn,criterion, device)
-                val_accuracies.append(val_accuracy)
-                val_losses.append(val_loss)
-
-                if not no_save:
-                    if val_losses[-1] < best_val:
-                        save_models([(lstm, names_models[0]), (rrn, names_models[2]), (mlp, names_models[3])], saving_path_rrn)
-                        best_val = val_losses[-1]
-
-                print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
-                print("Train accuracy: ", avg_train_accuracies[-1], ". Validation accuracy: ", val_accuracies[-1])
-                print()
-                train_losses =  []
-                train_accuracies = []
-
-    return avg_train_losses, avg_train_accuracies, val_losses[1:], val_accuracies'''
-
-def test(stories, mlp, lstm, rrn, criterion, device):
-
-    pass
+        pass

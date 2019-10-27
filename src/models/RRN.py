@@ -5,7 +5,7 @@ from src.models.MLP import MLP
 
 class RRN(nn.Module):
 
-    def __init__(self, dim_hidden, message_dim, output_dim, f_dims, o_dims, device, batch_size, g_layers=1, edge_attribute_dim=0, single_output=False):
+    def __init__(self, input_dim_mlp, hidden_dims_mlp, dim_hidden, message_dim, output_dim, f_dims, o_dims, device, batch_size, g_layers=1, edge_attribute_dim=0, single_output=False, relu=True, dropout=False):
         '''
         :param n_units: number of nodes in the graph
         :param edge_attribute_dim: 0 if edges have no attributes, else an integer. Default 0.
@@ -38,7 +38,14 @@ class RRN(nn.Module):
         self.g = LSTM(output_gmlp_dim, self.dim_hidden, num_layers=self.g_layers, batch_first=True)
 
         input_o_dim = self.dim_hidden
-        self.o = MLP(input_o_dim, self.o_dims, self.output_dim, dropout=True)
+        self.o = MLP(input_o_dim, self.o_dims, self.output_dim, dropout=dropout)
+
+        self.input_mlp = MLP(input_dim_mlp, hidden_dims_mlp, dim_hidden, relu=relu, nonlinear=False, dropout=dropout)
+
+
+    def process_input(self, x):
+        return self.input_mlp(x)
+
 
     def forward(self, x, hidden, h, edge_attribute=None):
         '''
@@ -63,7 +70,7 @@ class RRN(nn.Module):
             input_f = torch.cat((hi,hj), dim=2)
 
 
-        messages = self.f(input_f)
+        messages = self.f(input_f.view(-1, input_f.size(2)))
 
         messages = messages.view(hidden.size(0),hidden.size(1),hidden.size(1), self.message_dim)
 
@@ -72,19 +79,17 @@ class RRN(nn.Module):
 
         input_g_mlp = torch.cat((x, sum_messages), dim=2)
 
-        input_g = self.g_mlp(input_g_mlp)
+        input_g = self.g_mlp(input_g_mlp.view(-1, input_g_mlp.size(2)))
 
-        out, h = self.g(input_g, h)
-
-        hidden = out.clone()
+        out_g, h = self.g(input_g.view(input_g_mlp.size(0), input_g_mlp.size(1), -1), h)
 
         if self.single_output:
-            sum_hidden = torch.sum(hidden, dim=1)
+            sum_hidden = torch.sum(out_g, dim=1)
             out = self.o(sum_hidden)
         else:
             out = self.o(hidden)
 
-        return out, hidden, h
+        return out, out_g, h
 
     def reset_g(self, b):
         # hidden is composed by hidden and cell state vectors

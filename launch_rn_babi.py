@@ -48,7 +48,7 @@ args = parser.parse_args()
 if args.batch_size == 1:
     print("Batch size must be > 1. Setting it to 2.")
     args.batch_size = 2
-    
+
 result_folder = get_run_folder(args.name)
 
 wandb.init(project="relation-network-babi", name=args.name, config=args, dir=result_folder)
@@ -156,7 +156,7 @@ if args.test_jointly:
     print("Test loss: ", avg_test_loss)
 else:
     print("Testing separately...")
-    avg_test_accuracy = test_separately(test_stories, lstm, rn, criterion, device, args.batch_size)
+    avg_test_accuracy = test_separately(test_stories, lstm, rn, device, args.batch_size)
     avg_test_loss = None
     print("Test accuracy: ", avg_test_accuracy)
 

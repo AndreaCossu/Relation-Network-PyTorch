@@ -132,7 +132,7 @@ def test(stories, lstm, rn, criterion, device, batch_size):
         return test_loss / float(len(test_dataset)), test_accuracy / float(len(test_dataset))
 
 
-def test_separately(stories, lstm, rn, criterion, device, batch_size):
+def test_separately(stories, lstm, rn, device, batch_size):
     '''
     Supported only with batch_size = 1 because it tests separately each babi task.
     To use it with batch_size > 1 accounts for different task accuracies in each batch.

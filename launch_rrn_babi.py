@@ -2,7 +2,6 @@ import wandb
 from src.models.RRN import RRN
 from src.nlp_utils import read_babi, vectorize_babi
 from src.models.LSTM import LSTM
-from src.models.MLP import MLP
 import torch
 import argparse
 import os
@@ -123,45 +122,42 @@ print("Done reading babi!")
 lstm = LSTM(args.hidden_dim_lstm, args.batch_size, dict_size, args.emb_dim, args.lstm_layers, device, wave_penc=args.wave_penc, dropout=args.dropout).to(device)
 lstm.apply(init_weights)
 
-input_dim_mlp = args.hidden_dim_lstm + args.hidden_dim_lstm + 40
-mlp = MLP(input_dim_mlp, args.hidden_dims_mlp, args.hidden_dim_rrn, relu=args.relu_act, nonlinear=False, dropout=args.dropout).to(device)
-mlp.apply(init_weights)
+input_dim_mlp = args.hidden_dim_lstm + args.hidden_dim_lstm + 20
 
-rrn = RRN(args.hidden_dim_rrn, args.message_dim_rrn, dict_size, args.f_dims, args.o_dims, device, args.batch_size, g_layers=1, edge_attribute_dim=args.hidden_dim_lstm, single_output=True).to(device)
+rrn = RRN(input_dim_mlp, args.hidden_dims_mlp, args.hidden_dim_rrn, args.message_dim_rrn, dict_size, args.f_dims, args.o_dims, device, args.batch_size, g_layers=1, edge_attribute_dim=args.hidden_dim_lstm, single_output=True, relu=args.relu_act, dropout=args.dropout).to(device)
 rrn.apply(init_weights)
 
 wandb.watch(lstm)
-wandb.watch(mlp)
 wandb.watch(rrn)
 
 if args.load:
-    load_models([(lstm, names_models[0]), (rrn, names_models[2]), (mlp, names_models[3])], saving_path_rrn)
+    load_models([(lstm, names_models[0]), (rrn, names_models[2])], saving_path_rrn)
 
-optimizer = torch.optim.Adam(chain(lstm.parameters(), rrn.parameters(), mlp.parameters()), args.learning_rate, weight_decay=args.weight_decay)
+optimizer = torch.optim.Adam(chain(lstm.parameters(), rrn.parameters()), args.learning_rate, weight_decay=args.weight_decay)
 
 criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 
 if args.epochs > 0:
     print("Start training")
-    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, mlp, lstm, rrn, criterion, optimizer, args.batch_size, args.no_save, device, result_folder)
+    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, lstm, rrn, criterion, optimizer, args.batch_size, args.no_save, device, result_folder)
     print("End training!")
 
-if not args.test_on_test:
+'''if not args.test_on_test:
     test_stories = validation_stories
 
 if args.test_jointly:
     print("Testing jointly...")
-    avg_test_loss, avg_test_accuracy = test(test_stories, mlp, lstm, rrn, criterion, device, args.batch_size)
+    avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rrn, criterion, device, args.batch_size)
 
     print("Test accuracy: ", avg_test_accuracy)
     print("Test loss: ", avg_test_loss)
 else:
     print("Testing separately...")
-    avg_test_accuracy = test_separately(test_stories, mlp, lstm, rrn, criterion, device, args.batch_size)
+    avg_test_accuracy = test_separately(test_stories, lstm, rrn, device, args.batch_size)
     avg_test_loss = None
     print("Test accuracy: ", avg_test_accuracy)
 
     write_test(result_folder, losses=avg_test_loss, accs=avg_test_accuracy)
 
 if args.epochs > 0:
-    plot_results(result_folder, avg_train_losses, val_losses, avg_train_accuracies, val_accuracies)
+    plot_results(result_folder, avg_train_losses, val_losses, avg_train_accuracies, val_accuracies)'''

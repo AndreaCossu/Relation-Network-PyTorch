@@ -245,7 +245,7 @@ saving_stories_not_valid  = 'babi/vectorized_en-valid-10k/'
 results_folder = 'results'
 saving_path_rn = 'rn.tar'
 saving_path_rrn = 'rrn.tar'
-names_models = ['LSTM', 'RN', 'RRN', 'MLP']
+names_models = ['LSTM', 'RN', 'RRN']
 
 files_names_train_en_valid = [
     'qa1_train.txt',
