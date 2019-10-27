@@ -75,7 +75,8 @@ if args.babi_tasks == -1: # 20 tasks are already dumped to file
     dictionary = load_dict(args.en_valid)
 
     train_stories = load_stories(args.en_valid, 'train')
-    validation_stories = load_stories(args.en_valid, 'valid')
+    #validation_stories = load_stories(args.en_valid, 'valid')
+    validation_stories = []
     if args.test_on_test:
         test_stories = load_stories(args.en_valid, 'test')
 
@@ -122,7 +123,7 @@ print("Done reading babi!")
 lstm = LSTM(args.hidden_dim_lstm, args.batch_size, dict_size, args.emb_dim, args.lstm_layers, device, wave_penc=args.wave_penc, dropout=args.dropout).to(device)
 lstm.apply(init_weights)
 
-input_dim_mlp = args.hidden_dim_lstm + args.hidden_dim_lstm + 20
+input_dim_mlp = args.hidden_dim_lstm + args.hidden_dim_lstm + 40
 
 rrn = RRN(input_dim_mlp, args.hidden_dims_mlp, args.hidden_dim_rrn, args.message_dim_rrn, dict_size, args.f_dims, args.o_dims, device, args.batch_size, g_layers=1, edge_attribute_dim=args.hidden_dim_lstm, single_output=True, relu=args.relu_act, dropout=args.dropout).to(device)
 rrn.apply(init_weights)

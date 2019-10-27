@@ -45,11 +45,11 @@ def train(train_stories, validation_stories, epochs, lstm, rrn, criterion, optim
 
             question_emb, h_q = lstm.process_query(question_batch, h_q)
 
-            facts_emb, h_f = lstm.process_facts(facts_batch, h_f)
+            facts_emb, one_of_k, h_f = lstm.process_facts_rrn(facts_batch, h_f)
 
-            input_mlp = torch.cat( (facts_emb, question_emb), dim=2)
+
+            input_mlp = torch.cat( (facts_emb, question_emb.unsqueeze(1).repeat(1,facts_emb.size(1),1), one_of_k), dim=2)
             final_input = rrn.process_input(input_mlp)
-
             correct_rr = 0.
             loss_rr = 0.
             loss = 0.

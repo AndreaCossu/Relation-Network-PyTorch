@@ -69,20 +69,13 @@ class RRN(nn.Module):
         else:
             input_f = torch.cat((hi,hj), dim=2)
 
-
         messages = self.f(input_f.view(-1, input_f.size(2)))
-
         messages = messages.view(hidden.size(0),hidden.size(1),hidden.size(1), self.message_dim)
-
         # sum_messages[i] contains the sum of the messages incoming to node i
         sum_messages = torch.sum(messages, dim=2) # B, N_facts, Message_dim
-
         input_g_mlp = torch.cat((x, sum_messages), dim=2)
-
         input_g = self.g_mlp(input_g_mlp.view(-1, input_g_mlp.size(2)))
-
         out_g, h = self.g(input_g.view(input_g_mlp.size(0), input_g_mlp.size(1), -1), h)
-
         if self.single_output:
             sum_hidden = torch.sum(out_g, dim=1)
             out = self.o(sum_hidden)
@@ -93,9 +86,8 @@ class RRN(nn.Module):
 
     def reset_g(self, b):
         # hidden is composed by hidden and cell state vectors
-        self.batch_size = b
         h = (
-            torch.zeros(self.g_layers, b, self.dim_hidden, device=self.device, requires_grad=True),
-            torch.zeros(self.g_layers, b, self.dim_hidden, device=self.device, requires_grad=True)
+            torch.zeros(self.g_layers, self.batch_size, self.dim_hidden, device=self.device, requires_grad=True),
+            torch.zeros(self.g_layers, self.batch_size, self.dim_hidden, device=self.device, requires_grad=True)
             )
         return h
