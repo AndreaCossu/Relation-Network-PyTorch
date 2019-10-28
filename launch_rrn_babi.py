@@ -131,7 +131,7 @@ wandb.watch(lstm)
 wandb.watch(rrn)
 
 if args.load:
-    load_models([(lstm, names_models[0]), (rrn, names_models[2])], saving_path_rrn)
+    load_models([(lstm, names_models[0]), (rrn, names_models[2])], result_folder, saving_path_rrn)
 
 optimizer = torch.optim.Adam(chain(lstm.parameters(), rrn.parameters()), args.learning_rate, weight_decay=args.weight_decay)
 
