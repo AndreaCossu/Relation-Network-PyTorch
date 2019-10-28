@@ -108,8 +108,8 @@ def test(stories, lstm, rrn, criterion, device, batch_size):
     with torch.no_grad():
 
         test_babi_dataset = BabiDataset(stories)
-        test_accuracy = []
-        test_loss = []
+        test_accuracy = 0.
+        test_loss = 0.
 
         test_dataset = DataLoader(test_babi_dataset, batch_size=batch_size, shuffle=False, collate_fn=batchify, drop_last=True)
 
