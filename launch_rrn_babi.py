@@ -75,8 +75,7 @@ if args.babi_tasks == -1: # 20 tasks are already dumped to file
     dictionary = load_dict(args.en_valid)
 
     train_stories = load_stories(args.en_valid, 'train')
-    #validation_stories = load_stories(args.en_valid, 'valid')
-    validation_stories = []
+    validation_stories = load_stories(args.en_valid, 'valid')
     if args.test_on_test:
         test_stories = load_stories(args.en_valid, 'test')
 
@@ -143,7 +142,7 @@ if args.epochs > 0:
     avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, lstm, rrn, criterion, optimizer, args.batch_size, args.no_save, device, result_folder)
     print("End training!")
 
-'''if not args.test_on_test:
+if not args.test_on_test:
     test_stories = validation_stories
 
 if args.test_jointly:
@@ -161,4 +160,4 @@ else:
     write_test(result_folder, losses=avg_test_loss, accs=avg_test_accuracy)
 
 if args.epochs > 0:
-    plot_results(result_folder, avg_train_losses, val_losses, avg_train_accuracies, val_accuracies)'''
+    plot_results(result_folder, avg_train_losses, val_losses, avg_train_accuracies, val_accuracies)

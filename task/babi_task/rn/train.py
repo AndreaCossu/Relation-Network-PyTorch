@@ -109,8 +109,6 @@ def test(stories, lstm, rn, criterion, device, batch_size):
                                                             answer_batch.to(device), \
                                                             facts_batch.to(device)
 
-            lstm.zero_grad()
-            rn.zero_grad()
 
             h_q = lstm.reset_hidden_state_query()
             h_f = lstm.reset_hidden_state_fact(facts_batch.size(0))
@@ -133,10 +131,7 @@ def test(stories, lstm, rn, criterion, device, batch_size):
 
 
 def test_separately(stories, lstm, rn, device, batch_size):
-    '''
-    Supported only with batch_size = 1 because it tests separately each babi task.
-    To use it with batch_size > 1 accounts for different task accuracies in each batch.
-    '''
+
 
     with torch.no_grad():
 
@@ -158,8 +153,6 @@ def test_separately(stories, lstm, rn, device, batch_size):
                                                             facts_batch.to(device), \
                                                             task_label.tolist()
 
-            lstm.zero_grad()
-            rn.zero_grad()
 
             h_q = lstm.reset_hidden_state_query()
             h_f = lstm.reset_hidden_state_fact(facts_batch.size(0))
