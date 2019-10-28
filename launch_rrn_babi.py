@@ -52,7 +52,7 @@ if args.batch_size == 1:
 
 result_folder = get_run_folder(os.path.join('rrn',args.name))
 
-wandb.init(project="relational-network-babi", name=args.name, config=args, dir=result_folder, group='rrn')
+wandb.init(project="relational-network-babi", name='rrn_'+args.name, config=args, dir=result_folder, group='rrn')
 
 
 mode = 'cpu'
