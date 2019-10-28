@@ -82,7 +82,7 @@ def train(train_stories, validation_stories, epochs, lstm, rrn, criterion, optim
 
         if not no_save:
             if val_losses[-1] < best_val:
-                save_models([(lstm, names_models[0]), (rrn, names_models[1])], result_folder, saving_path_rrn)
+                save_models([(lstm, names_models[0]), (rrn, names_models[2])], result_folder, saving_path_rrn)
                 best_val = val_losses[-1]
 
         print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
