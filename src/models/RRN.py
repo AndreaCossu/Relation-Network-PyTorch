@@ -38,7 +38,7 @@ class RRN(nn.Module):
         self.g = LSTM(output_gmlp_dim, self.dim_hidden, num_layers=self.g_layers, batch_first=True)
 
         input_o_dim = self.dim_hidden
-        self.o = MLP(input_o_dim, self.o_dims, self.output_dim, dropout=dropout)
+        self.o = MLP(input_o_dim, self.o_dims, self.output_dim, dropout=True)
 
         self.input_mlp = MLP(input_dim_mlp, hidden_dims_mlp, dim_hidden, relu=relu, nonlinear=False, dropout=dropout)
 
