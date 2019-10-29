@@ -5,8 +5,6 @@ Implementation of Recurrent Relational Network. Original paper: https://arxiv.or
 
 This repository uses PyTorch v1.3 (Python3.7).
 
-## RRN is still a WORK IN PROGRESS
-
 # Implementation details
 This implementation tests the Relation Network model (RN) and the Recurrent Relational Network model (RRN) against the babi dataset, available at https://research.fb.com/downloads/babi/
 
@@ -24,8 +22,9 @@ This repository uses Weights and Biases (W&B) to monitor experiments. You can cr
 * Model implementation is inside `src/models/RN.py`
 * Train and test functions are inside `task/babi_task/rn/train.py`
 * The main script is `launch_rn_babi.py`.
-  * Run it with `python launch_rn_babi.py [options]`.
+  * Run it with `python launch_rn_babi.py experiment_name [options]`.
   * Options are listed and explained with `python launch_rn_babi.py --help`.
+  * Use always `--en_valid` and never specify `--babi_tasks`.
 
 To reproduce results execute `python launch_rn_babi.py test --en_valid --learning_rate 1e-4 --batch_size 20 --relu_act --epochs 50 ` and then check under `results/test` to see the results. If you want to do the final test on the test set instead of validation set, use `--test_on_test` option. The final accuracy on test set is (task: accuracy):
 * 1: 0.973
@@ -56,10 +55,33 @@ To reproduce results execute `python launch_rn_babi.py test --en_valid --learnin
 * Relu activation dramatically improves accuracy, but only when using `batch size > 1`. If `batch size == 1` relu prevents learning, while tanh achieves `~74%` accuracy on the joint dataset.
 * You can find the version with `batch size == 1` in the branch `no_batch`.
 
-# Train and test RRN (WORK IN PROGRESS)
+# Train and test RRN
 * Model implementation is inside `src/models/RRN.py`
 * Train and test functions are inside `task/babi_task/rrn/train.py`
 * The main script is `launch_rrn_babi.py`.
   * Run it with `python launch_rrn_babi.py experiment_name [options]`.
   * Options are listed and explained with `python launch_rrn_babi.py --help`.
   * Use always `--en_valid` and never specify `--babi_tasks`.
+
+Current best accuracies are listed below (values computed on validation set). To reproduce them run `python launch_rrn_babi.py test --epochs 100 --batch_size 20 --learning_rate 1e-4 --relu_act --en_valid --weight_decay 0` and then check under folder `results/rrn/test` to see results.
+
+*  1: 0.822
+*  2: 0.462
+*  3: 0.515
+*  4: 0.471
+*  5: 0.97
+*  6: 0.97
+*  7: 0.982
+*  8: 0.768
+*  9: 0.955
+*  10: 0.944
+*  11: 0.906
+*  12: 0.73
+*  13: 0.819
+*  14: 0.852
+*  15: 0.585
+*  16: 0.309
+*  17: 0.268
+*  18: 0.890
+*  19: 0.267
+*  20: 0.987
