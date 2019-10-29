@@ -45,7 +45,7 @@ class MLP(nn.Module):
         for i in range(1,len(self.hidden_dims)):
             x = self.linears[i](x)
             x = self.activation(x)
-            if self.use_dropout and (i==len(self.hidden_dims)-1) or (i==len(self.hidden_dims)-2):
+            if self.use_dropout and ((i==len(self.hidden_dims)-1) or (i==len(self.hidden_dims)-2)):
                 # x = self.batchnorms[i](x)
                 x = self.dropouts[i](x)
 
