@@ -27,7 +27,6 @@ parser.add_argument('--emb_dim', type=int, default=32, help='word embedding dime
 
 parser.add_argument('--dropout', action="store_true", help='enable dropout')
 parser.add_argument('--tanh_act', action="store_true", help='use tanh activation for MLP instead of relu')
-parser.add_argument('--wave_penc', action="store_true", help='use sin/cos positional encoding instead of one-of-k')
 
 # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 parser.add_argument('--babi_tasks', nargs='+', type=int, default=-1, help='which babi task to train and test. -1 to select all of them.')
@@ -119,7 +118,7 @@ dict_size = len(dictionary)
 print("Dictionary size: ", dict_size)
 print("Done reading babi!")
 
-lstm = LSTM(args.hidden_dim_lstm, args.batch_size, dict_size, args.emb_dim, args.lstm_layers, device, wave_penc=args.wave_penc, dropout=args.dropout).to(device)
+lstm = LSTM(args.hidden_dim_lstm, args.batch_size, dict_size, args.emb_dim, args.lstm_layers, device, dropout=args.dropout).to(device)
 lstm.apply(init_weights)
 
 input_dim_mlp = args.hidden_dim_lstm + args.hidden_dim_lstm + 40
