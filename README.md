@@ -24,9 +24,8 @@ This repository uses Weights and Biases (W&B) to monitor experiments. You can cr
 * The main script is `launch_rn_babi.py`.
   * Run it with `python launch_rn_babi.py experiment_name [options]`.
   * Options are listed and explained with `python launch_rn_babi.py --help`.
-  * Use always `--en_valid` and never specify `--babi_tasks`.
 
-To reproduce results execute `python launch_rn_babi.py test --en_valid --learning_rate 1e-4 --batch_size 20 --relu_act --epochs 50 ` and then check under `results/test` to see the results. If you want to do the final test on the test set instead of validation set, use `--test_on_test` option. The final accuracy on test set is (task: accuracy):
+To reproduce results execute `python launch_rn_babi.py test --learning_rate 1e-4 --batch_size 20 --epochs 50 ` and then check under `results/test` to see the results. If you want to do the final test on the test set instead of validation set, use `--test_on_test` option. The final accuracy on test set is (task: accuracy):
 * 1: 0.973
 * 2: 0.828
 * 3: 0.786
@@ -61,9 +60,8 @@ To reproduce results execute `python launch_rn_babi.py test --en_valid --learnin
 * The main script is `launch_rrn_babi.py`.
   * Run it with `python launch_rrn_babi.py experiment_name [options]`.
   * Options are listed and explained with `python launch_rrn_babi.py --help`.
-  * Use always `--en_valid` and never specify `--babi_tasks`.
 
-Current best accuracies are listed below (values computed on validation set). To reproduce them run `python launch_rrn_babi.py test --epochs 100 --batch_size 20 --learning_rate 1e-4 --relu_act --en_valid --weight_decay 0` and then check under folder `results/rrn/test` to see results.
+Current best accuracies are listed below (values computed on validation set). To reproduce them run `python launch_rrn_babi.py test --epochs 100 --batch_size 20 --learning_rate 1e-4 --weight_decay 0` and then check under folder `results/rrn/test` to see results.
 
 *  1: 0.822
 *  2: 0.462
