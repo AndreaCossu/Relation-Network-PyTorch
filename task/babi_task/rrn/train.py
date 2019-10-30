@@ -10,7 +10,7 @@ REASONING_STEPS = 3
 def train(train_stories, validation_stories, epochs, lstm, rrn, criterion, optimizer, batch_size, no_save, device, result_folder):
 
     train_babi_dataset = BabiDataset(train_stories)
-    best_val = 1000.
+    best_acc = 0.
     val_accuracies = []
     val_losses = []
     avg_train_accuracies = []
@@ -82,9 +82,9 @@ def train(train_stories, validation_stories, epochs, lstm, rrn, criterion, optim
         val_losses.append(val_loss)
 
         if not no_save:
-            if val_losses[-1] < best_val:
+            if val_accuracies[-1] > best_acc:
                 save_models([(lstm, names_models[0]), (rrn, names_models[2])], result_folder, saving_path_rrn)
-                best_val = val_losses[-1]
+                best_acc = val_accuracies[-1]
 
         print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
         print("Train accuracy: ", avg_train_accuracies[-1], ". Validation accuracy: ", val_accuracies[-1])

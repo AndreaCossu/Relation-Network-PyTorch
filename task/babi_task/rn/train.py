@@ -9,7 +9,7 @@ from collections import defaultdict
 def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, no_save, device, result_folder, batch_size):
 
     train_babi_dataset = BabiDataset(train_stories)
-    best_val = 1000.
+    best_acc = 0.
     val_accuracies = []
     val_losses = []
     avg_train_accuracies = []
@@ -66,9 +66,9 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
         val_losses.append(val_loss)
 
         if not no_save:
-            if val_losses[-1] < best_val:
+            if val_accuracies[-1] > best_acc:
                 save_models([(lstm, names_models[0]), (rn, names_models[1])], result_folder, saving_path_rn)
-                best_val = val_losses[-1]
+                best_acc = val_accuracies[-1]
 
         print("Train loss: ", avg_train_losses[-1], ". Validation loss: ", val_losses[-1])
         print("Train accuracy: ", avg_train_accuracies[-1], ". Validation accuracy: ", val_accuracies[-1])
