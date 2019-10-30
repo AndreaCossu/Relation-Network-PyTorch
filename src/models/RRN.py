@@ -6,11 +6,6 @@ from src.models.MLP import MLP
 class RRN(nn.Module):
 
     def __init__(self, input_dim_mlp, hidden_dims_mlp, dim_hidden, message_dim, output_dim, f_dims, o_dims, device, batch_size, g_layers=1, edge_attribute_dim=0, single_output=False, relu=True, dropout=False):
-        '''
-        :param n_units: number of nodes in the graph
-        :param edge_attribute_dim: 0 if edges have no attributes, else an integer. Default 0.
-        :param single_output: True if RRN emits only one output at a time, False if it emits as many outputs as units. Default False.
-        '''
 
         super(RRN, self).__init__()
 
@@ -48,14 +43,6 @@ class RRN(nn.Module):
 
 
     def forward(self, x, hidden, h, edge_attribute=None):
-        '''
-        This can be called repeatedly after hidden states are set.
-
-        :param x: inputs to the RRN nodes
-        :param hidden: hidden states of RRN nodes (B, N_facts, H)
-        :param h: hidden and cell states of g
-        :param edge_attributes: (B, Q_dim) tensor containing edge attribute or None if edges have no attributes. Default None.
-        '''
 
         n_facts = hidden.size(1)
 

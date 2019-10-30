@@ -4,10 +4,6 @@ import torch.nn as nn
 class MLP(nn.Module):
 
     def __init__(self, input_dim, hidden_dims, output_dim, relu=False, nonlinear=False, dropout=False):
-        '''
-        :param nonlinear: if False last layer is linear, if True is nonlinear. Default False.
-        '''
-
         super(MLP, self).__init__()
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims
@@ -30,17 +26,12 @@ class MLP(nn.Module):
             self.activation = torch.relu
 
     def forward(self, x):
-        '''
-        :param x: (n_features)
-        '''
 
         x = self.linears[0](x)
         x = self.activation(x)
-        '''
         if self.use_dropout:
             # x = self.batchnorms[0](x)
             x = self.dropouts[0](x)
-        '''
 
         for i in range(1,len(self.hidden_dims)):
             x = self.linears[i](x)

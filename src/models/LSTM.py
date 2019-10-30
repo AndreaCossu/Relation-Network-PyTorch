@@ -26,11 +26,6 @@ class LSTM(nn.Module):
         self.lstm_f = nn.LSTM(dim_embedding, hidden_dim, num_layers=self.layers, batch_first = True)
 
     def process_query(self, x, h):
-        '''
-        :param x: (B, n_words_q)
-        '''
-
-
         emb = self.embeddings(x) # (B, n_words_q, dim_emb)
 
         if self.use_dropout:
@@ -41,9 +36,6 @@ class LSTM(nn.Module):
         return h[0].squeeze(), h
 
     def process_facts_rrn(self, x, h):
-        '''
-        :param x: (n_facts, n_words_facts)
-        '''
 
         emb = self.embeddings(x) # (n_facts, n_words_facts, dim_emb)
         if self.use_dropout:
@@ -63,9 +55,6 @@ class LSTM(nn.Module):
         return processed, oneofk, h
 
     def process_facts(self, x, h):
-        '''
-        :param x: (n_facts, n_words_facts)
-        '''
 
         emb = self.embeddings(x) # (n_facts, n_words_facts, dim_emb)
         if self.use_dropout:

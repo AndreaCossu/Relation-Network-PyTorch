@@ -5,9 +5,6 @@ from src.models.MLP import MLP
 class RelationNetwork(nn.Module):
 
     def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, dropout, relu, batch_size, wave_penc, device):
-        '''
-        :param object_dim: Equal to LSTM hidden dim. Dimension of the single object to be taken into consideration from g.
-        '''
 
         super(RelationNetwork, self).__init__()
 
@@ -31,10 +28,7 @@ class RelationNetwork(nn.Module):
 
 
     def forward(self, x, q=None):
-        '''
-        :param x: (n_facts, hidden_dim_f)
-        :param q: (hidden_dim_q) query, optional.
-        '''
+
 
         n_facts = x.size(1)
 
