@@ -24,15 +24,15 @@ parser.add_argument('--o_dims', nargs='+', type=int, default=[128, 128], help='h
 parser.add_argument('--batch_size', type=int, default=512, help='batch size for stories')
 
 parser.add_argument('--emb_dim', type=int, default=32, help='word embedding dimension')
-parser.add_argument('--only_relevant', action="store_true", help='read only relevant fact from babi dataset')
 
 parser.add_argument('--dropout', action="store_true", help='enable dropout')
-parser.add_argument('--relu_act', action="store_true", help='use relu activation for MLP instead of tanh')
+parser.add_argument('--tanh_act', action="store_true", help='use tanh activation for MLP instead of relu')
 parser.add_argument('--wave_penc', action="store_true", help='use sin/cos positional encoding instead of one-of-k')
 
 # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 parser.add_argument('--babi_tasks', nargs='+', type=int, default=-1, help='which babi task to train and test. -1 to select all of them.')
-parser.add_argument('--en_valid', action="store_true", help='Use en-valid-10k instead of en-10k folder of babi')
+parser.add_argument('--split_manually', action="store_true", help='Use en-10k folder instead of en-valid-10k folder of babi. Active only with --babi_tasks specified.')
+parser.add_argument('--only_relevant', action="store_true", help='read only relevant fact from babi dataset. Active only with --split_manually')
 
 # optimizer parameters
 parser.add_argument('--weight_decay', type=float, default=1e-5, help='optimizer hyperparameter')
@@ -72,17 +72,17 @@ cd = os.path.dirname(os.path.abspath(__file__))
 if args.babi_tasks == -1: # 20 tasks are already dumped to file
     args.babi_tasks = list(range(1,21))
     print('Loading babi')
-    dictionary = load_dict(args.en_valid)
+    dictionary = load_dict(separately=False)
 
-    train_stories = load_stories(args.en_valid, 'train')
-    validation_stories = load_stories(args.en_valid, 'valid')
+    train_stories = load_stories(False, 'train')
+    validation_stories = load_stories(False, 'valid')
     if args.test_on_test:
-        test_stories = load_stories(args.en_valid, 'test')
+        test_stories = load_stories(False, 'test')
 
     print('Babi loaded')
 
 else: # single combinations have to be preprocessed from scratch
-    if args.en_valid:
+    if not args.split_manually:
         path_babi_base = os.path.join(cd, os.path.join("babi", "en-valid-10k"))
         to_read_test = [files_names_test_en_valid[i-1] for i in args.babi_tasks]
         to_read_val = [files_names_val_en_valid[i-1] for i in args.babi_tasks]
@@ -96,7 +96,7 @@ else: # single combinations have to be preprocessed from scratch
 
 
 
-    if not args.en_valid: # When reading from en-10k and not from en-valid-10k
+    if args.split_manually: # When reading from en-10k and not from en-valid-10k
         stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
         train_stories, validation_stories = split_train_validation(stories, labels)
         train_stories = vectorize_babi(train_stories, dictionary, device)
@@ -124,7 +124,7 @@ lstm.apply(init_weights)
 
 input_dim_mlp = args.hidden_dim_lstm + args.hidden_dim_lstm + 40
 
-rrn = RRN(input_dim_mlp, args.hidden_dims_mlp, args.hidden_dim_rrn, args.message_dim_rrn, dict_size, args.f_dims, args.o_dims, device, args.batch_size, g_layers=1, edge_attribute_dim=args.hidden_dim_lstm, single_output=True, relu=args.relu_act, dropout=args.dropout).to(device)
+rrn = RRN(input_dim_mlp, args.hidden_dims_mlp, args.hidden_dim_rrn, args.message_dim_rrn, dict_size, args.f_dims, args.o_dims, device, args.batch_size, g_layers=1, edge_attribute_dim=args.hidden_dim_lstm, single_output=True, tanh=args.tanh_act, dropout=args.dropout).to(device)
 rrn.apply(init_weights)
 
 wandb.watch(lstm)

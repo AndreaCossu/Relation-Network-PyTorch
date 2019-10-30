@@ -98,8 +98,8 @@ def load_stories(valid, name):
 
     return stories
 
-def save_dict(dictionary, valid):
-    if valid:
+def save_dict(dictionary, separately):
+    if not separately:
         with open(saving_path_dict_valid, 'wb') as f:
             pickle.dump(dictionary, f)
         with open(saving_path_dict_valid_plain,'w') as f:
@@ -113,8 +113,8 @@ def save_dict(dictionary, valid):
                 f.write("%s\n" % item)
 
 
-def load_dict(valid):
-    if valid:
+def load_dict(separately):
+    if not separately:
         with open(saving_path_dict_valid, 'rb') as f:
             dictionary = pickle.load(f)
     else:

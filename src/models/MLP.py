@@ -3,7 +3,7 @@ import torch.nn as nn
 
 class MLP(nn.Module):
 
-    def __init__(self, input_dim, hidden_dims, output_dim, relu=False, nonlinear=False, dropout=False):
+    def __init__(self, input_dim, hidden_dims, output_dim, tanh=False, nonlinear=False, dropout=False):
         super(MLP, self).__init__()
         self.input_dim = input_dim
         self.hidden_dims = hidden_dims
@@ -20,7 +20,7 @@ class MLP(nn.Module):
             self.linears.append(nn.Linear(self.hidden_dims[i-1], self.hidden_dims[i]))
         self.linears.append(nn.Linear(self.hidden_dims[-1], self.output_dim))
 
-        if not relu:
+        if tanh:
             self.activation = torch.tanh
         else:
             self.activation = torch.relu

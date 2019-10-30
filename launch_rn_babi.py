@@ -22,17 +22,18 @@ parser.add_argument('--hidden_dim_lstm', type=int, default=32, help='units of LS
 parser.add_argument('--lstm_layers', type=int, default=1, help='layers of LSTM')
 
 parser.add_argument('--emb_dim', type=int, default=32, help='word embedding dimension')
-parser.add_argument('--only_relevant', action="store_true", help='read only relevant fact from babi dataset')
 parser.add_argument('--batch_size', type=int, default=3, help='batch size')
 
 parser.add_argument('--dropout', action="store_true", help='enable dropout')
-parser.add_argument('--relu_act', action="store_true", help='use relu activation for MLP instead of tanh')
+parser.add_argument('--tanh_act', action="store_true", help='use tanh activation for MLP instead of relu')
 parser.add_argument('--wave_penc', action="store_true", help='use sin/cos positional encoding instead of one-of-k')
 
 
 # [1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20]
 parser.add_argument('--babi_tasks', nargs='+', type=int, default=-1, help='which babi task to train and test. -1 to select all of them.')
-parser.add_argument('--en_valid', action="store_true", help='Use en-valid-10k instead of en-10k folder of babi')
+
+parser.add_argument('--split_manually', action="store_true", help='Use en-10k folder instead of en-valid-10k folder of babi. Active only with --babi_tasks specified.')
+parser.add_argument('--only_relevant', action="store_true", help='read only relevant fact from babi dataset. Active only with --split_manually')
 
 # optimizer parameters
 parser.add_argument('--weight_decay', type=float, default=0, help='optimizer hyperparameter')
@@ -70,17 +71,17 @@ cd = os.path.dirname(os.path.abspath(__file__))
 if args.babi_tasks == -1: # 20 tasks are already dumped to file
     args.babi_tasks = list(range(1,21))
     print('Loading babi')
-    dictionary = load_dict(args.en_valid)
+    dictionary = load_dict(separately=False) # use always en_valid
 
-    train_stories = load_stories(args.en_valid, 'train')
-    validation_stories = load_stories(args.en_valid, 'valid')
+    train_stories = load_stories(False, 'train')
+    validation_stories = load_stories(False, 'valid')
     if args.test_on_test:
-        test_stories = load_stories(args.en_valid, 'test')
+        test_stories = load_stories(False, 'test')
 
     print('Babi loaded')
 
 else: # single combinations have to be preprocessed from scratch
-    if args.en_valid:
+    if not args.split_manually:
         path_babi_base = os.path.join(cd, os.path.join("babi", "en-valid-10k"))
         to_read_test = [files_names_test_en_valid[i-1] for i in args.babi_tasks]
         to_read_val = [files_names_val_en_valid[i-1] for i in args.babi_tasks]
@@ -94,7 +95,7 @@ else: # single combinations have to be preprocessed from scratch
 
 
 
-    if not args.en_valid: # When reading from en-10k and not from en-valid-10k
+    if args.split_manually: # When reading from en-10k and not from en-valid-10k
         stories, dictionary, labels = read_babi(path_babi_base, to_read_train, args.babi_tasks, only_relevant=args.only_relevant)
         train_stories, validation_stories = split_train_validation(stories, labels)
         train_stories = vectorize_babi(train_stories, dictionary, device)
@@ -109,10 +110,10 @@ else: # single combinations have to be preprocessed from scratch
         test_stories = vectorize_babi(test_stories, dictionary, device)
 
 
-# save_dict(dictionary, args.en_valid)
-# save_stories(train_stories, args.en_valid, 'train')
-# save_stories(validation_stories, args.en_valid, 'valid')
-# save_stories(test_stories, args.en_valid, 'test')
+# save_dict(dictionary, args.split_manually)
+# save_stories(train_stories, args.split_manually, 'train')
+# save_stories(validation_stories, args.split_manually, 'valid')
+# save_stories(test_stories, args.split_manually, 'test')
 
 
 def init_weights(m):
@@ -127,7 +128,7 @@ print("Dictionary size: ", dict_size)
 lstm = LSTM(args.hidden_dim_lstm, args.batch_size, dict_size, args.emb_dim, args.lstm_layers, device, wave_penc=args.wave_penc, dropout=args.dropout).to(device)
 lstm.apply(init_weights)
 
-rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.dropout, args.relu_act, args.batch_size, args.wave_penc, device).to(device)
+rn = RelationNetwork(args.hidden_dim_lstm, args.hidden_dims_g, args.output_dim_g, args.hidden_dims_f, dict_size, args.dropout, args.tanh_act, args.batch_size, args.wave_penc, device).to(device)
 rn.apply(init_weights)
 
 wandb.watch(rn)

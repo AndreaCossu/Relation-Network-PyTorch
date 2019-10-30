@@ -4,7 +4,7 @@ from src.models.MLP import MLP
 
 class RelationNetwork(nn.Module):
 
-    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, dropout, relu, batch_size, wave_penc, device):
+    def __init__(self, object_dim, hidden_dims_g, output_dim_g, hidden_dims_f, output_dim_f, dropout, tanh, batch_size, wave_penc, device):
 
         super(RelationNetwork, self).__init__()
 
@@ -23,8 +23,8 @@ class RelationNetwork(nn.Module):
         self.batch_size = batch_size
         self.device = device
 
-        self.g = MLP(self.input_dim_g, self.hidden_dims_g, self.output_dim_g, relu=relu, nonlinear=True, dropout=dropout)
-        self.f = MLP(self.input_dim_f, self.hidden_dims_f, self.output_dim_f, relu=relu, dropout=dropout)
+        self.g = MLP(self.input_dim_g, self.hidden_dims_g, self.output_dim_g, tanh=tanh, nonlinear=True, dropout=dropout)
+        self.f = MLP(self.input_dim_f, self.hidden_dims_f, self.output_dim_f, tanh=tanh, dropout=dropout)
 
 
     def forward(self, x, q=None):
