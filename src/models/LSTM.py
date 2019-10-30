@@ -45,10 +45,7 @@ class LSTM(nn.Module):
 
         processed = h[0].squeeze().view(self.batch_size,-1,self.hidden_dim)
 
-        if not self.wave_penc:
-            oneofk = self.one_of_k(processed.size())
-        else:
-            oneofk = self.wave_positional_encoding(processed.size(0), processed.size(1))
+        oneofk = self.one_of_k(processed.size())
 
         return processed, oneofk, h
 
