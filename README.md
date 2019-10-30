@@ -61,25 +61,25 @@ To reproduce results execute `python launch_rn_babi.py test --learning_rate 1e-4
   * Run it with `python launch_rrn_babi.py experiment_name [options]`.
   * Options are listed and explained with `python launch_rrn_babi.py --help`.
 
-To reproduce results execute `python launch_rrn_babi.py test --epochs 100 --batch_size 20 --learning_rate 1e-4 --weight_decay 0` and then check under `results/rrn/test` to see the results. If you want to do the final test on the test set instead of validation set, use `--test_on_test` option. The final accuracy on validation set is (task: accuracy):
+To reproduce results execute `python launch_rrn_babi.py test --cuda --epochs 500 --batch_size 512 --weight_decay 1e-5 --learning_rate 2e-4` and then check under `results/rrn/test` to see the results. If you want to do the final test on the test set instead of validation set, use `--test_on_test` option. The final accuracy on validation set is (task: accuracy):
 
-*  1: 0.822
-*  2: 0.462
-*  3: 0.515
-*  4: 0.471
-*  5: 0.97
-*  6: 0.97
-*  7: 0.982
-*  8: 0.768
-*  9: 0.955
-*  10: 0.944
-*  11: 0.906
-*  12: 0.73
-*  13: 0.819
-*  14: 0.852
-*  15: 0.585
-*  16: 0.309
-*  17: 0.268
-*  18: 0.890
-*  19: 0.267
-*  20: 0.987
+* 1: 0.974
+* 2: 0.736
+* 3: 0.674
+* 4: 1.0
+* 5: 0.922
+* 6: 0.953
+* 7: 0.994
+* 8: 0.975
+* 9: 0.931
+* 10: 0.855
+* 11: 0.876
+* 12: 0.939
+* 13: 0.912
+* 14: 0.846
+* 15: 1.0
+* 16: 0.454
+* 17: 0.980
+* 18: 0.995
+* 19: 0.498  
+* 20: 0.999
