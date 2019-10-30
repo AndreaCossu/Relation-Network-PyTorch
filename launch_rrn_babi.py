@@ -20,7 +20,7 @@ parser.add_argument('--hidden_dims_mlp', nargs='+', type=int, default=[128, 128,
 parser.add_argument('--hidden_dim_rrn', type=int, default=32, help='hidden dimension of RRN hidden state')
 parser.add_argument('--message_dim_rrn', type=int, default=32, help='hidden dimension of RRN messages')
 parser.add_argument('--f_dims', nargs='+', type=int, default=[128, 128, 128], help='hidden layers dimension of message MLP inside RRN')
-parser.add_argument('--o_dims', nargs='+', type=int, default=[128, 128, 128], help='hidden layers dimension of output MLP inside RRN')
+parser.add_argument('--o_dims', nargs='+', type=int, default=[128, 128], help='hidden layers dimension of output MLP inside RRN')
 parser.add_argument('--batch_size', type=int, default=512, help='batch size for stories')
 
 parser.add_argument('--emb_dim', type=int, default=32, help='word embedding dimension')
