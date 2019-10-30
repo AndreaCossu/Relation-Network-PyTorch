@@ -86,7 +86,7 @@ class RRN(nn.Module):
     def reset_g(self, b):
         # hidden is composed by hidden and cell state vectors
         h = (
-            torch.zeros(self.g_layers, self.batch_size, self.dim_hidden, device=self.device, requires_grad=True),
-            torch.zeros(self.g_layers, self.batch_size, self.dim_hidden, device=self.device, requires_grad=True)
+            torch.zeros(self.g_layers, b, self.dim_hidden, device=self.device, requires_grad=True),
+            torch.zeros(self.g_layers, b, self.dim_hidden, device=self.device, requires_grad=True)
             )
         return h
