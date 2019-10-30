@@ -123,7 +123,7 @@ lstm.apply(init_weights)
 
 input_dim_mlp = args.hidden_dim_lstm + args.hidden_dim_lstm + 40
 
-rrn = RRN(input_dim_mlp, args.hidden_dims_mlp, args.hidden_dim_rrn, args.message_dim_rrn, dict_size, args.f_dims, args.o_dims, device, args.batch_size, g_layers=1, edge_attribute_dim=args.hidden_dim_lstm, single_output=True, tanh=args.tanh_act, dropout=args.dropout).to(device)
+rrn = RRN(args.hidden_dim_lstm, input_dim_mlp, args.hidden_dims_mlp, args.hidden_dim_rrn, args.message_dim_rrn, dict_size, args.f_dims, args.o_dims, device, args.batch_size, g_layers=1, edge_attribute_dim=args.hidden_dim_lstm, single_output=True, tanh=args.tanh_act, dropout=args.dropout).to(device)
 rrn.apply(init_weights)
 
 wandb.watch(lstm)

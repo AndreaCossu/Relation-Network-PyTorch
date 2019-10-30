@@ -5,7 +5,7 @@ from src.models.MLP import MLP
 
 class RRN(nn.Module):
 
-    def __init__(self, input_dim_mlp, hidden_dims_mlp, dim_hidden, message_dim, output_dim, f_dims, o_dims, device, batch_size, g_layers=1, edge_attribute_dim=0, single_output=False, tanh=False, dropout=False):
+    def __init__(self, hidden_dim_lstm, input_dim_mlp, hidden_dims_mlp, dim_hidden, message_dim, output_dim, f_dims, o_dims, device, batch_size, g_layers=1, edge_attribute_dim=0, single_output=False, tanh=False, dropout=False):
 
         super(RRN, self).__init__()
 
@@ -24,18 +24,17 @@ class RRN(nn.Module):
         self.edge_attribute_dim = edge_attribute_dim
         self.single_output = single_output
 
-        input_f_dim = 2 * self.dim_hidden + self.edge_attribute_dim
+        input_f_dim = hidden_dim_lstm + edge_attribute_dim
         self.f = MLP(input_f_dim, self.f_dims, self.message_dim, tanh=tanh, dropout=dropout)
 
-        input_gmlp_dim = self.dim_input + self.message_dim
-        output_gmlp_dim = 128
-        self.g_mlp = MLP(input_gmlp_dim, self.f_dims, output_gmlp_dim, tanh=tanh, dropout=dropout)
-        self.g = LSTM(output_gmlp_dim, self.dim_hidden, num_layers=self.g_layers, batch_first=True)
+        input_gmlp_dim = hidden_dims_mlp[-1] + self.message_dim
+        self.g_mlp = MLP(input_gmlp_dim, self.f_dims, hidden_dims_mlp[-1], tanh=tanh, dropout=dropout)
+        self.g = LSTM(hidden_dims_mlp[-1], self.dim_hidden, num_layers=self.g_layers, batch_first=True)
 
         input_o_dim = self.dim_hidden
         self.o = MLP(input_o_dim, self.o_dims, self.output_dim, tanh=tanh, dropout=dropout)
 
-        self.input_mlp = MLP(input_dim_mlp, hidden_dims_mlp, dim_hidden, tanh=tanh, nonlinear=False, dropout=dropout)
+        self.input_mlp = MLP(input_dim_mlp, hidden_dims_mlp, hidden_dims_mlp[-1], tanh=tanh, nonlinear=False, dropout=dropout)
 
         self.dropout_layer = nn.Dropout(p=0.5)
 
