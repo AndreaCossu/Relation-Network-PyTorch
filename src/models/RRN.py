@@ -72,8 +72,7 @@ class RRN(nn.Module):
 
         # the following version user recurrent network over time steps (time=LEARNING STEPS)
         out_g, h = self.g(input_g.unsqueeze(1), h)
-        out_g.squeeze(1).view(input_g_mlp.size(0), input_g_mlp.size(1), -1)
-
+        out_g = out_g.squeeze(1).view(input_g_mlp.size(0), input_g_mlp.size(1), -1)
 
         if self.single_output:
             sum_hidden = torch.sum(out_g, dim=1)
