@@ -69,6 +69,7 @@ class RRN(nn.Module):
 
         # the following version use recurrent network over facts (time dimension is 1 = #facts)
         #out_g, h = self.g(input_g.view(input_g_mlp.size(0), input_g_mlp.size(1), -1), h)
+
         # the following version user recurrent network over time steps (time=LEARNING STEPS)
         out_g, h = self.g(input_g.unsqueeze(1), h)
         out_g.squeeze(1).view(input_g_mlp.size(0), input_g_mlp.size(1), -1)

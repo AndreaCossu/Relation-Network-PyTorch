@@ -53,9 +53,10 @@ def train(train_stories, validation_stories, epochs, lstm, rrn, criterion, optim
             correct_rr = 0.
             loss_rr = 0.
             loss = 0.
+            h = rrn.reset_g(final_input.size(0)*final_input.size(1))
+
             for reasoning_step in range(REASONING_STEPS):
 
-                h = rrn.reset_g(final_input.size(0)*final_input.size(1))
                 rr, hidden, h = rrn(final_input, facts_emb , h, question_emb)
 
                 loss += criterion(rr, answer_batch)
@@ -134,9 +135,9 @@ def test(stories, lstm, rrn, criterion, device, batch_size):
             final_input = rrn.process_input(input_mlp)
 
             loss = 0.
+            h = rrn.reset_g(final_input.size(0)*final_input.size(1))
             for reasoning_step in range(REASONING_STEPS):
 
-                h = rrn.reset_g(final_input.size(0)*final_input.size(1))
                 rr, hidden, h = rrn(final_input, facts_emb , h, question_emb)
 
                 if reasoning_step == REASONING_STEPS-1:
@@ -181,9 +182,9 @@ def test_separately(stories, lstm, rrn, device, batch_size):
             input_mlp = torch.cat( (facts_emb, question_emb.unsqueeze(1).repeat(1,facts_emb.size(1),1), one_of_k), dim=2)
             final_input = rrn.process_input(input_mlp)
 
+            h = rrn.reset_g(final_input.size(0)*final_input.size(1))
             for reasoning_step in range(REASONING_STEPS):
 
-                h = rrn.reset_g(final_input.size(0)*final_input.size(1))
                 rr, hidden, h = rrn(final_input, facts_emb , h, question_emb)
 
                 if reasoning_step == REASONING_STEPS -1:
