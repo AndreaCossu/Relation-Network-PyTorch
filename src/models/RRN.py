@@ -37,6 +37,7 @@ class RRN(nn.Module):
 
         self.input_mlp = MLP(input_dim_mlp, hidden_dims_mlp, dim_hidden, tanh=tanh, nonlinear=False, dropout=dropout)
 
+        self.dropout_layer = nn.Dropout(p=0.5)
 
     def process_input(self, x):
         return self.input_mlp(x)
@@ -57,6 +58,7 @@ class RRN(nn.Module):
             input_f = torch.cat((hi,hj), dim=2)
 
         messages = self.f(input_f.view(-1, input_f.size(2)))
+        messages = self.dropout_layer(messages)
         messages = messages.view(hidden.size(0),hidden.size(1),hidden.size(1), self.message_dim)
         # sum_messages[i] contains the sum of the messages incoming to node i
         '''
