@@ -61,7 +61,7 @@ To reproduce results execute `python launch_rn_babi.py test --learning_rate 1e-4
   * Run it with `python launch_rrn_babi.py experiment_name [options]`.
   * Options are listed and explained with `python launch_rrn_babi.py --help`.
 
-Current best accuracies are listed below (values computed on validation set). To reproduce them run `python launch_rrn_babi.py test --epochs 100 --batch_size 20 --learning_rate 1e-4 --weight_decay 0` and then check under folder `results/rrn/test` to see results.
+To reproduce results execute `python launch_rrn_babi.py test --epochs 100 --batch_size 20 --learning_rate 1e-4 --weight_decay 0` and then check under `results/rrn/test` to see the results. If you want to do the final test on the test set instead of validation set, use `--test_on_test` option. The final accuracy on validation set is (task: accuracy):
 
 *  1: 0.822
 *  2: 0.462
