@@ -24,7 +24,7 @@ class RRN(nn.Module):
         self.edge_attribute_dim = edge_attribute_dim
         self.single_output = single_output
 
-        input_f_dim = hidden_dim_lstm + edge_attribute_dim
+        input_f_dim = 2*hidden_dim_lstm + edge_attribute_dim
         self.f = MLP(input_f_dim, self.f_dims, self.message_dim, tanh=tanh, dropout=dropout)
 
         input_gmlp_dim = hidden_dims_mlp[-1] + self.message_dim
