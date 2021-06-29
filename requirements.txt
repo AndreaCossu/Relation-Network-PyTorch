@@ -2,3 +2,4 @@ torch
 scikit-learn
 wandb
 nltk
+matplotlib
