@@ -6,7 +6,7 @@ from src.utils import  BabiDataset, batchify, get_answer_separately
 from collections import defaultdict
 
 
-def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, no_save, device, result_folder, batch_size):
+def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimizer, no_save, device, result_folder, batch_size, dict_size):
 
     train_babi_dataset = BabiDataset(train_stories)
     best_acc = 0.
@@ -20,7 +20,7 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
         train_accuracies = []
         train_losses = []
 
-        train_dataset = DataLoader(train_babi_dataset, batch_size=batch_size, shuffle=True, collate_fn=batchify, drop_last=True)
+        train_dataset = DataLoader(train_babi_dataset, batch_size=batch_size, shuffle=True, collate_fn=lambda b: batchify(data_batch=b, dict_size=dict_size), drop_last=True)
 
         rn.train()
         lstm.train()
@@ -61,7 +61,7 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
         avg_train_losses.append(sum(train_losses)/len(train_losses))
         avg_train_accuracies.append(sum(train_accuracies)/len(train_accuracies))
 
-        val_loss, val_accuracy = test(validation_stories,lstm,rn,criterion, device, batch_size)
+        val_loss, val_accuracy = test(validation_stories,lstm,rn,criterion, device, batch_size, dict_size)
         val_accuracies.append(val_accuracy)
         val_losses.append(val_loss)
 
@@ -87,7 +87,7 @@ def train(train_stories, validation_stories, epochs, lstm, rn, criterion, optimi
     return avg_train_losses, avg_train_accuracies, val_losses, val_accuracies
 
 
-def test(stories, lstm, rn, criterion, device, batch_size):
+def test(stories, lstm, rn, criterion, device, batch_size, dict_size):
 
     with torch.no_grad():
 
@@ -98,7 +98,7 @@ def test(stories, lstm, rn, criterion, device, batch_size):
         lstm.eval()
 
         test_babi_dataset = BabiDataset(stories)
-        test_dataset = DataLoader(test_babi_dataset, batch_size=batch_size, shuffle=False, collate_fn=batchify, drop_last=True)
+        test_dataset = DataLoader(test_babi_dataset, batch_size=batch_size, shuffle=False, collate_fn=lambda b: batchify(data_batch=b, dict_size=dict_size), drop_last=True)
 
 
         for batch_id, (question_batch,answer_batch,facts_batch,_,_) in enumerate(test_dataset):
@@ -130,7 +130,7 @@ def test(stories, lstm, rn, criterion, device, batch_size):
         return test_loss / float(len(test_dataset)), test_accuracy / float(len(test_dataset))
 
 
-def test_separately(stories, lstm, rn, device, batch_size):
+def test_separately(stories, lstm, rn, device, batch_size, dict_size):
 
 
     with torch.no_grad():
@@ -141,7 +141,7 @@ def test_separately(stories, lstm, rn, device, batch_size):
         lstm.eval()
 
         test_babi_dataset = BabiDataset(stories)
-        test_dataset = DataLoader(test_babi_dataset, batch_size=batch_size, shuffle=False, collate_fn=batchify, drop_last=True)
+        test_dataset = DataLoader(test_babi_dataset, batch_size=batch_size, shuffle=False, collate_fn=lambda b: batchify(data_batch=b, dict_size=dict_size), drop_last=True)
 
 
         for batch_id, (question_batch,answer_batch,facts_batch,task_label,_) in enumerate(test_dataset):

@@ -143,7 +143,7 @@ criterion = torch.nn.CrossEntropyLoss(reduction='mean')
 
 if args.epochs > 0:
     print("Start training")
-    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.no_save, device, result_folder, args.batch_size)
+    avg_train_losses, avg_train_accuracies, val_losses, val_accuracies = train(train_stories, validation_stories, args.epochs, lstm, rn, criterion, optimizer, args.no_save, device, result_folder, args.batch_size, dict_size)
     print("End training!")
 
 if not args.test_on_test:
@@ -151,13 +151,13 @@ if not args.test_on_test:
 
 if args.test_jointly:
     print("Testing jointly...")
-    avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion, device, args.batch_size)
+    avg_test_loss, avg_test_accuracy = test(test_stories, lstm, rn, criterion, device, args.batch_size, dict_size)
 
     print("Test accuracy: ", avg_test_accuracy)
     print("Test loss: ", avg_test_loss)
 else:
     print("Testing separately...")
-    avg_test_accuracy = test_separately(test_stories, lstm, rn, device, args.batch_size)
+    avg_test_accuracy = test_separately(test_stories, lstm, rn, device, args.batch_size, dict_size)
     avg_test_loss = None
     print("Test accuracy: ", avg_test_accuracy)
 
