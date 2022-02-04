@@ -42,7 +42,7 @@ class BabiDataset(Dataset):
 
         return (question, answer, facts, label, ordering)
 
-def batchify(data_batch):
+def batchify(data_batch, dict_size):
     '''
     Custom collate_fn for dataset
 
@@ -73,12 +73,12 @@ def batchify(data_batch):
     #lengths_q = torch.tensor([el.size(0) for el in q_s]).long() # number of words
 
     rows, columns = max([ el.size(0) for el in f_s] ), max([ el.size(1) for el in f_s] )
-    ff = torch.ones(len(f_s), rows, columns, dtype=torch.long)*157 # len(dictionary) as pad value
+    ff = torch.ones(len(f_s), rows, columns, dtype=torch.long)*dict_size # len(dictionary) as pad value
     for i, t in enumerate(f_s):
         r, c = t.size(0), t.size(1)
         ff[i, :r, :c] = t
 
-    return ( pad_sequence(q_s, batch_first=True, padding_value=157), torch.stack(a_s, dim=0), ff.view(-1, ff.size(2)), torch.stack(l_s, dim=0), o_s)
+    return ( pad_sequence(q_s, batch_first=True, padding_value=dict_size), torch.stack(a_s, dim=0), ff.view(-1, ff.size(2)), torch.stack(l_s, dim=0), o_s)
 
 def save_stories(stories, valid, name):
     if valid:
